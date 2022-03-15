@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block header %}{% block title %}Channels{% endblock %}{% endblock %}
+
+{% block content %}
+
+    {% for single_channel in channel_list %}
+        <div>
+            <p>
+                <img src="{{ single_channel['thumb_url'] }}" alt="thumbnail" style="width: 3em;" />
+                <span><a href="{{ url_for('channels.single_channel', channel_id=single_channel['channel_id']) }}">{{ single_channel['channel_name'] }}</a></span>
+            </p>
+        </div>
+    {% endfor %}
+    
+    {% if g.user %}
+        <a href="#add_channel_dialog">Add channel</a><br />
+        <a href="{{ url_for('channels.fetch_channels') }}">Fetch channels</a>
+        <div class="modal" id="add_channel_dialog">
+            <div class="modal-dialog">
+                <a href="#" class="close-button">[x]</a>
+                <div style="margin:auto">
+                    <form action="{{ url_for('channels.add_channel') }}" method="post">
+                        <label for="channel_id">Channel id: </label>
+                        <input type="text" id="channel_id" name="channel_id" /><br />
+                        <input type="submit" value="add">
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+{% endblock %}

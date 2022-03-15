@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+
+{% block header %}{% block title %}{{ video_info['title'] }}{% endblock %}{% endblock %}
+
+{% block content %}
+
+    <table>
+        <tr>
+            <td><img src="{{  video_info['video_thumb'] }}" alt="Video thumbnail" style="height: 16em;"/></td>
+            <td>
+                <p>Channel: <a href="{{ url_for('channels.single_channel', channel_id = video_info['channel_id']) }}">{{ video_info['channel_name'] }}</a></p>
+                <p>Upload date: {{ video_info['upload_date'] }}</p>
+                <p>Original URL: <a href="https://www.youtube.com/watch?v={{ video_info['video_id'] }}" target="_blank">{{ video_info['video_id'] }}</a></p>
+                <table>
+                    <tr>
+                        <td>Talents: </td>
+                        <td>
+                            <p>
+                                {% for talent_name in video_info['talents'].split('\r\n') %}
+                                    {{ talent_name.strip() }}{% if not loop.last %},&nbsp;{% endif %}
+                                {% endfor %}
+                            </p>
+                        </td>
+                        {% if g.user %}
+                            <td><a href="#add-talent">Edit</a></td>
+                        {% endif %}
+                    </tr>
+                </table>
+                {% if video_relpath %}
+                    <p><a href="#video-window">Play archived</a></p>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+
+    {% if g.user %}
+        <div class="modal" id="add-talent">
+            <div class="modal-dialog">
+                <p class="close-button"><a href="#">[x]</a></p>
+                <p>Please enter name of talents, one per line: </p>
+                <form method="post" action="{{ url_for('videos.add_talent', video_id=video_info['video_id']) }}">
+                    <textarea rows="4" id="talents" name="talents">{{ video_info['talents'] }}</textarea> 
+                    <input type="submit" value="Apply" />
+                </form>
+            </div>
+        </div>
+    {% endif %}
+
+    {% if video_relpath %}
+        <div class="modal" id="video-window">
+            <div class="modal-dialog" style="vertical-align: top;">
+                <p class="close-button"><a href="#">[x]</a></p>
+                <video style="max-width: 70%;" controls>
+                    <source src="{{ url_for('static', filename=video_relpath) }}" />
+                </video>
+            </div>
+        </div>
+    {% endif %}
+
+{% endblock %}

@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block header %}{% block title %}Settings{% endblock %}{% endblock %}
+
+{% block content %}
+    <form method="post">
+        <table>
+            <tr>
+                <td>Slow Mode: </td>
+                <td>{{ dl_configs['slow_mode'] }}</td>
+                <td><input id='slow_mode' name="slow_mode" value="{{ request.form['slow_mode'] or dl_configs['slow_mode'] }}"></td>
+            </tr>
+            <tr>
+                <td>Sleep time: </td>
+                <td>{{ dl_configs['sleep_time'] }}</td>
+                <td><input id='sleep_time' name="sleep_time" value="{{ request.form['sleep_time'] or dl_configs['sleep_time'] }}"></td>
+            </tr>
+            <tr>
+                <td>Cookie path: </td>
+                <td>{{ dl_configs['cookie_path'] }}</td>
+                <td><input id='cookie_path' name="cookie_path" value="{{ request.form['cookie_path'] or dl_configs['cookie_path'] }}"></td>
+            </tr>
+            <tr>
+                <td>Download path: </td>
+                <td>{{ dl_configs['download_path'] }}</td>
+                <td><input id='download_path' name="download_path" value="{{ request.form['download_path'] or dl_configs['download_path'] }}"></td>
+            </tr>
+            <tr>
+                <td>Local videos: </td>
+                <td>{{ dl_configs['local_videos'] }}</td>
+                <td><input id='local_videos' name="local_videos" value="{{ request.form['download_path'] or dl_configs['download_path'] }}"></td>
+            </tr>
+        </table>
+    <input type="submit" value="Apply">
+    </form>
+
+    <p><a href="{{ url_for('management.scan_local') }}">Scan local files</a></p>
+
+    {% if is_downloading %}
+        <p><span style="color: #86473F;">Downloading!</span> <a href="{{ url_for('management.stop_tasks') }}" style="color: #AB3B3A; font-weight: bold;">STOP</a></p>
+    {% else %}
+        <p><span style="color: #20604F;">Free</span> <a href="{{ url_for('management.trigger_download') }}" style="color: #268785; font-weight: bold;">START</a></p>
+    {% endif %}
+
+
+{% endblock %}

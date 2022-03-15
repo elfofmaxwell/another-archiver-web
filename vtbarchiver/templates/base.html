@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>{% block title %}{% endblock %} - vtbarchiver</title>
+        <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    </head>
+
+    <body>
+        <h1>VTuber Archiver</h1>
+        <hr />
+        <nav>
+            <table>
+                <tr>
+                    <th><a href="{{ url_for('home.index') }}">Home</a></th>
+                    <th><a href="{{ url_for('channels.channels') }}">Channels</a></th>
+                    <th><a href="{{ url_for('videos.videos') }}">Videos</a></th>
+                    {% if g.user %}
+                        <th><a href="{{ url_for('management.settings') }}">Settings</a></th>
+                        <th><a href="{{ url_for('management.logout') }}">Logout</a></th>
+                    {% endif %}
+                </tr>
+            </table>
+        </nav>
+
+        <hr />
+        
+        <section>
+            <h2>{% block header %}{% endblock %}</h2>
+            {% for message in get_flashed_messages() %}
+                <div>{{ message }}</div>
+            {% endfor %}
+
+            {% block content %}{% endblock %}
+        </section>
+    </body>
+</html>

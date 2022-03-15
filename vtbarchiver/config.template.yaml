@@ -1,0 +1,5 @@
+cookie_path: ''
+download_path: /home/foo/bar
+local_videos: /home/foo/bar
+sleep_time: '30'
+slow_mode: 'True'

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block header %}{% block title %}{{ channel_info['channel_name'] }}{% endblock %}{% endblock %}
+
+{% block content %}
+    <table>
+        <tr>
+            <td>
+                <img src="{{ channel_info['thumb_url'] }}" style="height: 6em;" alt="Thumb" />
+            </td>
+            <td>
+                <p>Talent name: {{ channel_info['talent_name'] }}
+                    {% if g.user %}
+                        - <a href="#edit-talent-dialog">Edit</a>
+                        - <a href="{{ url_for('channels.add_talent_name', channel_id=channel_info['channel_id']) }}">Auto add name</a>
+                    {% endif %}
+                </p>
+                <p>YouTube: <a href="https://youtube.com/channel/{{ channel_info['channel_id'] }}" target="_blank">{{ channel_info['channel_name'] }}</a></p>
+                {% if g.user %}
+                    <p>Download checkpoint: {{ channel_info['checkpoint_idx'] }} - <a href="#edit-checkpoint-dialog">Edit</a></p>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+
+    <table>
+        {% for single_video in videos_on_page %}
+            <tr>
+                <td>
+                    <img src="{{ single_video['thumb_url'] }}" style="height: 6em;" alt="Thumb" />
+                </td>
+                <td>
+                    <p><a href="{{ url_for('videos.single_video', video_id=single_video['video_id']) }}">{{ single_video['title'] }}</a></p>
+                    <p>{{ single_video['upload_date'] }}</p>
+                    <p>
+                        {% if single_video['local_id'] %}
+                            Archived
+                        {% else %}
+                            Not archived
+                        {% endif %}
+                    </p>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    <table>
+        <tr>
+            {% for i in range(page_num) %}
+                <td>
+                    <a href="{{ url_for('channels.single_channel', channel_id=channel_info['channel_id'], page=i+1) }}">{{ i+1 }}</a>
+                </td>
+            {% endfor %}
+        </tr>
+    </table>
+
+
+    {% if g.user %}
+        <!-- Modal for editing checkpoint -->
+        <div class="modal" id="edit-checkpoint-dialog">
+            <div class="modal-dialog">
+                <p class="close-button"><a href="#">[x]</a></p>
+                <div>
+                    {% for message in get_flashed_messages() %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{{ url_for('channels.edit_checkpoint', channel_id=channel_info['channel_id']) }}">
+                    <table>
+                        <tr>
+                            <td><label for="checkpoint_idx">New upload index: </label></td>
+                            <td><input id="checkpoint_idx" type="number" name="checkpoint_idx" /></td>
+                        </tr>
+                        <tr>
+                            <td><label for="video_id">New video ID: </label></td>
+                            <td><input id="video_id" type="text" name="video_id" /></td>
+                        </tr>
+                        <tr>
+                            <td><label for="offset">Offset: </label></td>
+                            <td><input id="offset" name="offset" type="number" /></td>
+                        </tr>
+                    </table>
+                    <input type="submit" value="Apply" />
+                </form>
+            </div>
+        </div>
+
+
+        <!-- edit talent name -->
+        <div class="modal" id="edit-talent-dialog">
+            <div class="modal-dialog">
+                <p class="close-button"><a href="#">[x]</a></p>
+                <div>
+                    {% for message in get_flashed_messages() %}
+                        <p>{{ message }}</p>
+                    {% endfor %}
+                </div>
+                <form method="post" action="{{ url_for('channels.edit_talent', channel_id=channel_info['channel_id']) }}">
+                    <table>
+                        <tr>
+                            <td><label for="talent_name">New talent name: </label></td>
+                            <td><input id="talent_name" type="text" name="talent_name" /></td>
+                        </tr>
+                    </table>
+                    <input type="submit" value="Apply" />
+                </form>
+            </div>
+        </div>    
+    {% endif %}
+{% endblock %}

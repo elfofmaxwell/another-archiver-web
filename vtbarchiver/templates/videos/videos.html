@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block header %}{% block title %}Videos{% endblock %}{% endblock %}
+
+{% block content %}
+    <table>
+        {% for single_video in videos_on_page %}
+            <tr>
+                <td>
+                    <img src="{{ single_video['thumb_url'] }}" style="height: 6em;" alt="Thumb" />
+                </td>
+                <td>
+                    <p><a href="{{ url_for('videos.single_video', video_id=single_video['video_id']) }}">{{ single_video['title'] }}</a></p>
+                    <p>{{ single_video['channel_name'] }}</p>
+                    <p>{{ single_video['upload_date'] }}</p>
+                    <p>
+                        {% if single_video['local_id'] %}
+                            Archived
+                        {% else %}
+                            Not archived
+                        {% endif %}
+                    </p>
+                </td>
+            </tr>
+        {% endfor %}
+    </table>
+
+
+    <table>
+        <tr>
+            {% for i in range(page_num) %}
+                <td>
+                    <a href="{{ url_for('videos.videos', page=i+1) }}">{{ i+1 }}</a>
+                </td>
+            {% endfor %}
+        </tr>
+    </table>
+
+{% endblock %}

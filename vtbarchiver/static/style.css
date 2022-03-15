@@ -1,0 +1,25 @@
+.modal {
+    display: none; 
+    position: fixed;
+    left: 0;
+    top: 0; 
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 9999;
+}
+
+.modal:target {
+    display: block;
+}
+
+.modal-dialog {
+    vertical-align: middle;
+    background-color: azure;
+    margin: 30% auto;
+}
+
+.close-button {
+    float: right;
+    text-decoration: none;
+}
