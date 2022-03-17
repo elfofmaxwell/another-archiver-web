@@ -125,11 +125,15 @@ def fetch_uploaded_list(channel_id: str):
 
 def add_talent_name(channel_id):
     db = get_db()
+    cur = db.cursor()
     try: 
-        cur = db.cursor()
-        cur.execute('SELECT talent_name FROM channel_list WHERE channel_id=?', (channel_id, ))
+        cur.execute('SELECT talent_name FROM channel_list WHERE channel_id = ?', (channel_id, ))
         talent_name = cur.fetchone()['talent_name']
-        cur.execute('UPDATE video_list SET talents=? WHERE channel_id=? AND talents=""', (talent_name, channel_id))
+        cur.execute('SELECT vl.video_id vl_id, tp.talent_name tp_name, tp.video_id tp_id FROM video_list vl LEFT OUTER JOIN talent_participation tp ON vl.video_id = tp.video_id WHERE vl.channel_id=?', (channel_id, ))
+        video_talent_list = cur.fetchall()
+        for video_talent in video_talent_list: 
+            if (video_talent['tp_id'] == None) or (video_talent['tp_name'] == ''): 
+                cur.execute('INSERT INTO talent_participation (talent_name, video_id) VALUES (?, ?)', (talent_name, video_talent['vl_id']))
         db.commit()
     except: 
         raise

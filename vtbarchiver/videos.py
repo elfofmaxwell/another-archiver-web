@@ -23,7 +23,7 @@ def videos(page):
         page_num = ceil(video_num/page_entry_num)
         cur.execute(
             '''
-            SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.thumb_url thumb_url, vl.talents talents, lv.id local_id, ch.channel_name channel_name
+            SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.thumb_url thumb_url, lv.id local_id, ch.channel_name channel_name
             FROM video_list vl
             LEFT OUTER JOIN local_videos lv
             ON vl.video_id = lv.video_id
@@ -44,11 +44,11 @@ def videos(page):
 @bp.route('/<video_id>')
 def single_video(video_id): 
     db = get_db()
+    cursor = db.cursor()
     try: 
-        cursor = db.cursor()
         cursor.execute(
             '''
-            SELECT vl.video_id video_id, vl.title title, vl.channel_id channel_id, vl.upload_date upload_date, vl.thumb_url video_thumb, vl.talents talents, ch.channel_name channel_name
+            SELECT vl.video_id video_id, vl.title title, vl.channel_id channel_id, vl.upload_date upload_date, vl.thumb_url video_thumb, ch.channel_name channel_name
             FROM video_list vl 
             JOIN channel_list ch
             ON vl.channel_id = ch.channel_id
@@ -62,8 +62,10 @@ def single_video(video_id):
         video_relpath = ''
         if local_video_info: 
             video_relpath = get_relpath_to_static(local_video_info['video_path'])
+        cursor.execute('SELECT talent_name FROM talent_participation WHERE video_id = ?', (video_id, ))
+        participators = cursor.fetchall()
 
-        return render_template('videos/single_video.html', video_info=video_info, video_relpath=video_relpath)
+        return render_template('videos/single_video.html', video_info=video_info, video_relpath=video_relpath, participators=participators)
     finally: 
         cursor.close()
 
@@ -72,10 +74,13 @@ def single_video(video_id):
 @login_required
 def add_talent(video_id): 
     if request.method == 'POST': 
+        talent_list = request.form['talents'].strip().split('\r\n')
         db = get_db()
+        cur = db.cursor()
         try: 
-            cur = db.cursor()
-            cur.execute('UPDATE video_list SET talents=? WHERE video_id=?', (request.form['talents'].strip(), video_id))
+            cur.execute('DELETE FROM talent_participation WHERE video_id=?', (video_id, ))
+            for talent_name in talent_list: 
+                cur.execute('INSERT INTO talent_participation (talent_name, video_id) VALUES (?, ?)', (talent_name, video_id))
             db.commit()
         finally:
             cur.close()

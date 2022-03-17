@@ -16,8 +16,8 @@
                         <td>Talents: </td>
                         <td>
                             <p>
-                                {% for talent_name in video_info['talents'].split('\r\n') %}
-                                    {{ talent_name.strip() }}{% if not loop.last %},&nbsp;{% endif %}
+                                {% for participator in participators %}
+                                    {{ participator['talent_name'] }}{% if not loop.last %},&nbsp;{% endif %}
                                 {% endfor %}
                             </p>
                         </td>
@@ -40,7 +40,7 @@
                 <p class="close-button"><a href="#">[x]</a></p>
                 <p>Please enter name of talents, one per line: </p>
                 <form method="post" action="{{ url_for('videos.add_talent', video_id=video_info['video_id']) }}">
-                    <textarea rows="4" id="talents" name="talents">{{ video_info['talents'] }}</textarea> 
+                    <textarea rows="4" id="talents" name="talents">{% for participator in participators %}{{ participator['talent_name']+'\r\n' }}{% endfor %}</textarea> 
                     <input type="submit" value="Apply" />
                 </form>
             </div>

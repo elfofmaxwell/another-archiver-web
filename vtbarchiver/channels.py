@@ -57,7 +57,7 @@ def single_channel(channel_id, page):
         page_num = ceil(video_num/page_entry_num)
         cur.execute(
             '''
-            SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.thumb_url thumb_url, vl.talents talents, lv.id local_id
+            SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.thumb_url thumb_url, lv.id local_id
             FROM video_list vl
             LEFT OUTER JOIN local_videos lv
             ON vl.video_id = lv.video_id
