@@ -1,32 +1,84 @@
 {% extends 'base.html' %}
 
-{% block header %}{% block title %}Channels{% endblock %}{% endblock %}
+{% block header %}
+<div class="d-flex">
+    <div><h2>{% block title %}Channels{% endblock %}</h2></div>
+    {% if g.user %}
+        <div class="flex-grow-1 align-self-center" style="text-align: right;"><button type="button" class="btn btn-primary" onclick="location.assign('{{ url_for('channels.fetch_channels') }}')">Fetch all</button></div>
+    {% endif %}
+</div>
+{% endblock %}
 
 {% block content %}
 
-    {% for single_channel in channel_list %}
-        <div>
-            <p>
-                <img src="{{ single_channel['thumb_url'] }}" alt="thumbnail" style="width: 3em;" />
-                <span><a href="{{ url_for('channels.single_channel', channel_id=single_channel['channel_id']) }}">{{ single_channel['channel_name'] }}</a></span>
-            </p>
-        </div>
-    {% endfor %}
-    
-    {% if g.user %}
-        <a href="#add_channel_dialog">Add channel</a><br />
-        <a href="{{ url_for('channels.fetch_channels') }}">Fetch channels</a>
-        <div class="modal" id="add_channel_dialog">
-            <div class="modal-dialog">
-                <a href="#" class="close-button">[x]</a>
-                <div style="margin:auto">
-                    <form action="{{ url_for('channels.add_channel') }}" method="post">
-                        <label for="channel_id">Channel id: </label>
-                        <input type="text" id="channel_id" name="channel_id" /><br />
-                        <input type="submit" value="add">
-                    </form>
+<div class="row">
+    <div class="col-sm-1"></div>
+
+    <div class="col-sm-10">
+
+        {% for single_channel in channel_list %}
+            <div class="bg-light shadow-sm mx-auto my-2 border rounded-2" onclick="location.assign('{{ url_for('channels.single_channel', channel_id=single_channel['channel_id']) }}')" style="cursor: pointer;"">
+                <div class="row mx-0">
+                    <div class="col-sm-4 border-end my-1">
+                        <div class="d-flex" style="height: 100%;">
+                            <div style="text-align: center; margin: auto;" class="align-self-center">
+                                <img src="{{ single_channel['thumb_url'] }}" class="rounded-circle" style="width: 5em;" alt="Thumb" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-8">
+                        <div class="d-flex px-2" style="height: 100%;">
+                            <div class="align-self-center">
+                                <div class="my-2">{{ single_channel['channel_name'] }}</div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
+        {% endfor %}
+
+        {% if g.user %}
+            <div class="shadow-sm mx-auto my-2 border rounded-2" onclick="switch_to_add_channel()" style="cursor: pointer;">
+                <div class="row mx-0">
+                    <div class="col-sm-4 border-end my-1">
+                        <div class="d-flex" style="height: 100%;">
+                            <div style="text-align: center; margin: auto;" class="align-self-center">
+                                <div style="height: 5em;" class="d-felex">
+                                    <div class="align-self-center">
+                                        <span style="font-size: 3em;" class="text-secondary">+</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-8">
+                        <div id="add-channel-tab"  class="d-flex px-2" style="height: 100%;">
+                            <div class="align-self-center">
+                                <div class="my-2 text-secondary">Add channel</div>
+                            </div>
+                        </div>
+                        <div id="add-channel-form-blk" class="d-none flex-row-reverse px-2" style="height: 100%;">
+                            <div class="align-self-center" style="text-align: right;">
+                                <button type="submit" class="btn btn-success" form="add-channel-form">Add</button>
+                            </div>
+                            
+                            <div class="align-self-center flex-grow-1 pe-3">
+                                <form id="add-channel-form" method="post" action="{{ url_for('channels.add_channel') }}">
+                                    <input name="channel_id" class="form-control" placeholder="New channel ID"/>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         {% endif %}
+
+
+    </div>
+
+
+    <div class="col-sm-1"></div>
+
+    
+    
 {% endblock %}

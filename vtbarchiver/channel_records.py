@@ -64,6 +64,7 @@ def fetch_channel(channel_id):
         if existing_id: 
             cur.execute('UPDATE channel_list SET channel_name=?, channel_description=?, thumb_url=? WHERE id=?', (channel_info['title'], channel_info['description'], channel_info['thumbnails']["medium"]["url"], existing_id[0][0]))
         else: 
+            #print(channel_id, channel_info['title'], channel_info['description'], channel_info['thumbnails']["medium"]["url"])
             cur.execute('INSERT INTO channel_list (channel_id, channel_name, channel_description, thumb_url) VALUES (?, ?, ?, ?)', (channel_id, channel_info['title'], channel_info['description'], channel_info['thumbnails']["medium"]["url"]))
     
     except: 

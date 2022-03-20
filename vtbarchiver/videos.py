@@ -63,9 +63,14 @@ def single_video(video_id):
         if local_video_info: 
             video_relpath = get_relpath_to_static(local_video_info['video_path'])
         cursor.execute('SELECT talent_name FROM talent_participation WHERE video_id = ?', (video_id, ))
-        participators = cursor.fetchall()
+        participator_list = cursor.fetchall()
+        participators = ','.join([i['talent_name'] for i in participator_list])
 
-        return render_template('videos/single_video.html', video_info=video_info, video_relpath=video_relpath, participators=participators)
+        cursor.execute('SELECT stream_type FROM stream_type WHERE video_id = ?', (video_id, ))
+        stream_type_list = cursor.fetchall()
+        stream_type = ','.join([i['stream_type'] for i in stream_type_list])
+
+        return render_template('videos/single_video.html', video_info=video_info, video_relpath=video_relpath, participators=participators, stream_type=stream_type)
     finally: 
         cursor.close()
 
@@ -74,15 +79,37 @@ def single_video(video_id):
 @login_required
 def add_talent(video_id): 
     if request.method == 'POST': 
-        talent_list = request.form['talents'].strip().split('\r\n')
+        
+        talent_list = request.form['talents'].strip().split(',')
+        
         db = get_db()
         cur = db.cursor()
         try: 
             cur.execute('DELETE FROM talent_participation WHERE video_id=?', (video_id, ))
             for talent_name in talent_list: 
-                cur.execute('INSERT INTO talent_participation (talent_name, video_id) VALUES (?, ?)', (talent_name, video_id))
+                cur.execute('INSERT INTO talent_participation (talent_name, video_id) VALUES (?, ?)', (talent_name.strip(), video_id))
             db.commit()
         finally:
             cur.close()
+        
     return redirect(url_for('videos.single_video', video_id=video_id))
 
+
+@bp.route('/<video_id>/add-stream-type', methods=('POST', 'GET'))
+@login_required
+def add_stream_type(video_id): 
+    if request.method == 'POST': 
+        
+        stream_type_list = request.form['stream_type'].strip().split(',')
+        
+        db = get_db()
+        cur = db.cursor()
+        try: 
+            cur.execute('DELETE FROM stream_type WHERE video_id=?', (video_id, ))
+            for stream_type in stream_type_list: 
+                cur.execute('INSERT INTO stream_type (stream_type, video_id) VALUES (?, ?)', (stream_type.strip(), video_id))
+            db.commit()
+        finally:
+            cur.close()
+        
+    return redirect(url_for('videos.single_video', video_id=video_id))

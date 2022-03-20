@@ -1,61 +1,170 @@
 {% extends 'base.html' %}
 
-{% block header %}{% block title %}{{ video_info['title'] }}{% endblock %}{% endblock %}
+{% block title %}{{ video_info['title'] }}{% endblock %}
 
 {% block content %}
+<script src="https://unpkg.com/@yaireo/tagify"></script>
+<script src="https://unpkg.com/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
 
-    <table>
-        <tr>
-            <td><img src="{{  video_info['video_thumb'] }}" alt="Video thumbnail" style="height: 16em;"/></td>
-            <td>
-                <p>Channel: <a href="{{ url_for('channels.single_channel', channel_id = video_info['channel_id']) }}">{{ video_info['channel_name'] }}</a></p>
-                <p>Upload date: {{ video_info['upload_date'] }}</p>
-                <p>Original URL: <a href="https://www.youtube.com/watch?v={{ video_info['video_id'] }}" target="_blank">{{ video_info['video_id'] }}</a></p>
-                <table>
-                    <tr>
-                        <td>Talents: </td>
-                        <td>
-                            <p>
-                                {% for participator in participators %}
-                                    {{ participator['talent_name'] }}{% if not loop.last %},&nbsp;{% endif %}
-                                {% endfor %}
-                            </p>
-                        </td>
-                        {% if g.user %}
-                            <td><a href="#add-talent">Edit</a></td>
-                        {% endif %}
-                    </tr>
-                </table>
-                {% if video_relpath %}
-                    <p><a href="#video-window">Play archived</a></p>
+
+<div class="row">
+
+    <div class="col-sm-12">
+        <div class="mt-4 row">
+            <div class="col-sm-6 d-flex">
+                <div class="align-self-center me-2" style="text-align: center;">
+                    <img src="{{  video_info['video_thumb'] }}" alt="Video thumbnail" style="width: 100%;" />
+                </div>
+            </div>
+            <div class="col-sm-6 d-flex justify-content-center">
+                <div class="align-self-center" style="width: 100%;">
+                    <div style="text-align: center;">
+                        <h4>{{ video_info['title'] }}</h4>
+                        <a href="{{ url_for('channels.single_channel', channel_id = video_info['channel_id']) }}" style="text-decoration: none;" class="text-secondary">{{ video_info['channel_name'] }}</a>
+                    </div>
+                    <div class="mt-3">
+                        <div class="d-flex justify-content-center">
+                            <div class="d-flex justify-content-center" style="width: 45%;">
+                                <div class="align-self-center" style="text-align: center;"><a class="text-dark" href="https://www.youtube.com/watch?v={{ video_info['video_id'] }}" target="_blank">{{ video_info['video_id'] }}</a></div>
+                            </div>
+                            <div class="d-flex justify-content-center" style="width: 45%;">
+                                <div class="video-upload-date align-self-center" style="text-align: center;">{{ video_info['upload_date'] }}</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center mt-1">
+                            <div style="width: 45%;">
+                                <div style="text-align: center; font-size: 0.7em;" class="text-secondary">Video ID</div>
+                            </div>
+                            <div style="width: 45%;">
+                                <div style="text-align: center; font-size: 0.7em;" class="text-secondary">Upload date</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% if video_relpath %}
+                        <div class="mt-3" style="text-align: center;">
+                            <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#archived-video-modal"><i class="iconfont icon-play"></i> Play archived</button>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        <div class="mt-4">
+            <div class="text-secondary" style="font-size: 1.1em;">Talents: </div>
+            <div class="mt-2">
+                {% for single_talent_name in participators.split(',') %}
+                    <span class="talent-badge mx-1 bg-light" style="display: inline-block;">{{ single_talent_name }}</span>
+                {% endfor %}
+                {% if g.user %}
+                <span style="display: inline-block; padding: 0.1em;"><a href="#edit-talent-modal" data-bs-toggle="modal" data-bs-target="#edit-talent-modal" style="text-decoration: none;"><i class="iconfont icon-set text-secondary" style="font-size: 1.5em;"></i></a></span>
                 {% endif %}
-            </td>
-        </tr>
-    </table>
+            </div>
+        </div> 
+        <div class="mt-4">
+            <div class="text-secondary" style="font-size: 1.1em;">Stream type: </div>
+            <div class="mt-2">
+                {% for single_stream_type in stream_type.split(',') %}
+                    {% if single_stream_type %}
+                        <span class="talent-badge mx-1 bg-light" style="display: inline-block;">{{ single_stream_type }}</span>
+                    {% endif %}
+                {% endfor %}
+                {% if g.user %}
+                    <span style="display: inline-block; padding: 0.1em; vertical-align: middle;"><a href="#edit-stream-type" data-bs-toggle="modal" data-bs-target="#edit-stream-type" style="text-decoration: none;"><i class="iconfont icon-set text-secondary" style="font-size: 1.5em;"></i></a></span>
+                {% endif %}
+            </div>
+        </div> 
+    </div>
 
 
-    {% if g.user %}
-        <div class="modal" id="add-talent">
-            <div class="modal-dialog">
-                <p class="close-button"><a href="#">[x]</a></p>
-                <p>Please enter name of talents, one per line: </p>
-                <form method="post" action="{{ url_for('videos.add_talent', video_id=video_info['video_id']) }}">
-                    <textarea rows="4" id="talents" name="talents">{% for participator in participators %}{{ participator['talent_name']+'\r\n' }}{% endfor %}</textarea> 
-                    <input type="submit" value="Apply" />
-                </form>
+</div>
+
+{% if video_relpath %}
+    <div class="modal" id="archived-video-modal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="player-title"><h4>{{ video_info['title'] }}</h4></div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mx-auto" style="width: 90%;">
+                        <video id="archived-video-player" style="width: 100%;" controls>
+                            <source src="{{ url_for('static', filename=video_relpath) }}" />
+                        </video>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+{% endif %}
+
+
+{% if g.user %}
+    <div class="modal" id="edit-talent-modal">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="player-title"><h4>Edit talents</h4></div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mx-auto" style="width: 90%;">
+                        <div id="talent-edit" class="row">
+                            <div class="col-sm-10">
+                                <input name="talent_list" value="{{ participators }}"/>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="submit" class="btn btn-outline-secondary" form="parsed-talent-form">Apply</button>
+                            </div>
+                        </div>
+                        <div class="d-none">
+                            <form id="parsed-talent-form" action="{{ url_for('videos.add_talent', video_id=video_info['video_id']) }}" method="post">
+                                <input type="hidden" id="parsed-talents" name="talents" />
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    {% endif %}
+    </div>
 
-    {% if video_relpath %}
-        <div class="modal" id="video-window">
-            <div class="modal-dialog" style="vertical-align: top;">
-                <p class="close-button"><a href="#">[x]</a></p>
-                <video style="max-width: 70%;" controls>
-                    <source src="{{ url_for('static', filename=video_relpath) }}" />
-                </video>
+    <div class="modal" id="edit-stream-type">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div class="player-title"><h4>Edit stream type</h4></div>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="mx-auto" style="width: 90%;">
+                        <div id="talent-edit" class="row">
+                            <div class="col-sm-10">
+                                <input name="stream_type" value="{{ stream_type }}"/>
+                            </div>
+                            <div class="col-sm-2">
+                                <button type="submit" class="btn btn-outline-secondary" form="parsed-stream-form">Apply</button>
+                            </div>
+                        </div>
+                        <div class="d-none">
+                            <form id="parsed-stream-form" action="{{ url_for('videos.add_stream_type', video_id=video_info['video_id']) }}" method="post">
+                                <input type="hidden" id="parsed-stream" name="stream_type" />
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
-    {% endif %}
+    </div>
+{% endif %}
 
+
+
+
+
+    <script>format_upload_date();</script>
+    <script src="{{ url_for('static', filename='scripts/single_video.js') }}"></script>
 {% endblock %}

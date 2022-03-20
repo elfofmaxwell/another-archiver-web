@@ -8,6 +8,7 @@ from vtbarchiver.db_functions import get_db
 from vtbarchiver.fetch_video_list import fetch_all, fetch_uploaded_list
 from vtbarchiver.fetch_video_list import add_talent_name as add_name
 from vtbarchiver.management import login_required
+from vtbarchiver.misc_funcs import get_pagination
 
 
 bp = Blueprint('channels', __name__, url_prefix='/channels')
@@ -57,7 +58,7 @@ def single_channel(channel_id, page):
         page_num = ceil(video_num/page_entry_num)
         cur.execute(
             '''
-            SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.thumb_url thumb_url, lv.id local_id
+            SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.thumb_url thumb_url, vl.upload_idx upload_idx, lv.id local_id
             FROM video_list vl
             LEFT OUTER JOIN local_videos lv
             ON vl.video_id = lv.video_id
@@ -65,11 +66,11 @@ def single_channel(channel_id, page):
             ORDER BY vl.upload_idx DESC
             LIMIT ? OFFSET ?
             ''', 
-            (channel_id, page_entry_num, (page-1)*page_num)
+            (channel_id, page_entry_num, (page-1)*page_entry_num)
         )
         videos_on_page = cur.fetchall()
-
-        return render_template('channels/single_channel.html', channel_info=channel_info, page_num=page_num, videos_on_page=videos_on_page)
+        pagination_list = get_pagination(current_page=page, page_num=page_num, pagination_length=5)
+        return render_template('channels/single_channel.html', channel_info=channel_info, page_num=page_num, current_page=page, pagination_list = pagination_list, video_num=video_num, videos_on_page=videos_on_page)
     finally: 
         cur.close()
 
