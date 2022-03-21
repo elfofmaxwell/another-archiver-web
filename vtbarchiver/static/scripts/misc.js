@@ -33,3 +33,21 @@ function switch_to_add_channel () {
     add_channel_form_blk.removeClass('d-none');
     add_channel_form_blk.addClass('d-flex');
 }
+
+function parse_duration () {
+    let duration_str = $(this).text().substr(2);
+    let parsed_time_list = [];
+    let splitor; 
+    let splitor_list = ['H', 'M', 'S']; 
+    for (splitor of splitor_list) {
+        let splitted_list = duration_str.split(splitor); 
+        if (splitted_list.length === 2) {
+            parsed_time_list.push(splitted_list[0].padStart(2, '0'));
+        }
+        duration_str = splitted_list[splitted_list.length-1];
+    }
+    let parsed_str = ''; 
+    parsed_str += parsed_time_list.join(':');
+    console.log(parsed_time_list)
+    $(this).text(parsed_str)
+}

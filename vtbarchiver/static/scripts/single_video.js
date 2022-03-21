@@ -1,4 +1,9 @@
 'use strict'
+format_upload_date();
+
+let video_duration_items = $('.video-duration');
+video_duration_items.each(parse_duration);
+
 // The DOM element you wish to replace with Tagify
 let input = document.querySelector('input[name=talent_list]');
 let stream_type = document.querySelector('input[name=stream_type]');
@@ -31,3 +36,4 @@ parsed_talent_form.submit(parse_talents);
 
 let parsed_stream_form = $('#parsed-stream-form');
 parsed_stream_form.submit(parse_stream_type);
+

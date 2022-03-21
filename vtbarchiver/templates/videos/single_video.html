@@ -11,9 +11,10 @@
 
     <div class="col-sm-12">
         <div class="mt-4 row">
-            <div class="col-sm-6 d-flex">
-                <div class="align-self-center me-2" style="text-align: center;">
+            <div class="col-sm-6">
+                <div class="align-self-center me-2" style="text-align: center; position: relative;">
                     <img src="{{  video_info['video_thumb'] }}" alt="Video thumbnail" style="width: 100%;" />
+                    <div class="duration-stamp video-duration">{{ video_info['duration'] }}</div>
                 </div>
             </div>
             <div class="col-sm-6 d-flex justify-content-center">
@@ -53,10 +54,12 @@
             <div class="text-secondary" style="font-size: 1.1em;">Talents: </div>
             <div class="mt-2">
                 {% for single_talent_name in participators.split(',') %}
-                    <span class="talent-badge mx-1 bg-light" style="display: inline-block;">{{ single_talent_name }}</span>
+                    {% if single_talent_name %}
+                        <span class="talent-badge mx-1" style="display: inline-block;">{{ single_talent_name }}</span>
+                    {% endif %}
                 {% endfor %}
                 {% if g.user %}
-                <span style="display: inline-block; padding: 0.1em;"><a href="#edit-talent-modal" data-bs-toggle="modal" data-bs-target="#edit-talent-modal" style="text-decoration: none;"><i class="iconfont icon-set text-secondary" style="font-size: 1.5em;"></i></a></span>
+                <span class="add-badge"><a href="#edit-talent-modal" data-bs-toggle="modal" data-bs-target="#edit-talent-modal" style="text-decoration: none; color: #4F4F48;"><i class="iconfont icon-set" style="font-size: 1.5em;"></i></a></span>
                 {% endif %}
             </div>
         </div> 
@@ -65,11 +68,11 @@
             <div class="mt-2">
                 {% for single_stream_type in stream_type.split(',') %}
                     {% if single_stream_type %}
-                        <span class="talent-badge mx-1 bg-light" style="display: inline-block;">{{ single_stream_type }}</span>
+                        <span class="talent-badge mx-1">{{ single_stream_type }}</span>
                     {% endif %}
                 {% endfor %}
                 {% if g.user %}
-                    <span style="display: inline-block; padding: 0.1em; vertical-align: middle;"><a href="#edit-stream-type" data-bs-toggle="modal" data-bs-target="#edit-stream-type" style="text-decoration: none;"><i class="iconfont icon-set text-secondary" style="font-size: 1.5em;"></i></a></span>
+                    <span class="add-badge"><a href="#edit-stream-type" data-bs-toggle="modal" data-bs-target="#edit-stream-type" style="text-decoration: none; color: #4F4F48;"><i class="iconfont icon-set" style="font-size: 1.5em;"></i></a></span>
                 {% endif %}
             </div>
         </div> 
@@ -80,7 +83,7 @@
 
 {% if video_relpath %}
     <div class="modal" id="archived-video-modal">
-        <div class="modal-dialog modal-lg">
+        <div class="modal-dialog modal-lg modal-dialog-centered modal-fullscreen-md-down">
             <div class="modal-content">
                 <div class="modal-header">
                     <div class="player-title"><h4>{{ video_info['title'] }}</h4></div>
@@ -165,6 +168,6 @@
 
 
 
-    <script>format_upload_date();</script>
+
     <script src="{{ url_for('static', filename='scripts/single_video.js') }}"></script>
 {% endblock %}

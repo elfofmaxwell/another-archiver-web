@@ -20,6 +20,7 @@ CREATE TABLE video_list (
     video_id TEXT NOT NULL UNIQUE, 
     title TEXT NOT NULL, 
     upload_date TEXT NOT NULL, 
+    duration TEXT NOT NULL, 
     channel_id TEXT NOT NULL, 
     upload_idx INTEGER NOT NULL DEFAULT 0, 
     thumb_url TEXT NOT NULL

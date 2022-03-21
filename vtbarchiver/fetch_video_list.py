@@ -26,6 +26,7 @@ class VideoInfo():
         self.title = title
         self.upload_date = upload_date
         self.thumb_url = thumb_url
+        self.duration = ''
 
 
 def retrieve_video_info(video_dict: dict): 
@@ -97,6 +98,7 @@ def fetch_uploaded_list(channel_id: str):
             playlistId=uploads_id, 
             maxResults=50, 
         )
+
         # keep ask for next page if there is more results and not fetched
         all_new_fetched = False
         while request: 
@@ -108,7 +110,15 @@ def fetch_uploaded_list(channel_id: str):
                     if single_video_info.video_id in [i[1] for i in existing_video_list]: 
                         all_new_fetched = True
                         break
-                    cur.execute('INSERT INTO video_list (video_id, title, upload_date, channel_id, thumb_url) VALUES (?, ?, ?, ?, ?)', (single_video_info.video_id, single_video_info.title, single_video_info.upload_date, channel_id, single_video_info.thumb_url))
+                    
+                    duration_request = youtube.videos().list(
+                        part="contentDetails", 
+                        id=single_video_info.video_id
+                    )
+                    duration_response = duration_request.execute()
+                    single_video_info.duration = duration_response['items'][0]['contentDetails']['duration']
+
+                    cur.execute('INSERT INTO video_list (video_id, title, upload_date, duration, channel_id, thumb_url) VALUES (?, ?, ?, ?, ?, ?)', (single_video_info.video_id, single_video_info.title, single_video_info.upload_date, single_video_info.duration, channel_id, single_video_info.thumb_url))
             if all_new_fetched: 
                 break
             request = youtube.playlistItems().list_next(request, response)

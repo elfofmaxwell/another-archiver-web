@@ -1,8 +1,79 @@
 {% extends 'base.html' %}
 
-{% block header %}{% block title %}Videos{% endblock %}{% endblock %}
+{% block title %}Videos{% endblock %}
+
 
 {% block content %}
+<div class="row">
+    <div class="col-sm-1"></div>
+
+    <div class="col-sm-10">
+
+        <div>
+            <h2 class="mb-3">Videos</h2>
+            {% for single_video in videos_on_page %}
+                <div class="bg-light shadow-sm mx-auto my-2 border rounded-2" onclick="location.assign('{{ url_for('videos.single_video', video_id=single_video['video_id']) }}')" style="cursor: pointer;">
+                    <div class="row mx-0">
+                        <div class="col-sm-3 border-end px-0">
+                            <div class="mx-auto d-flex" style="text-align: center; align-items: center; height: 100%;">
+                                <img src="{{ single_video['thumb_url'] }}" style="width: 100%; display: block;" alt="Thumb" class="border-0 rounded-2"/>
+                            </div>
+                        </div>
+                        <div class="col-sm-9">
+                            <div class="d-flex px-2" style="height: 100%;">
+                                <div class="align-self-center pe-2">
+                                    <div class="my-2">{{ single_video['title'] }}</div>
+                                    <div class="my-2 text-secondary" style="font-size: 0.9em;">{{ single_video['channel_name'] }}</div>
+                                    <div class="my-2 text-secondary" style="font-size: 0.9em;">
+                                        <span class="video-upload-date">{{ single_video['upload_date'] }}</span>, 
+                                        <span class="video-duration">{{ single_video['duration'] }}</span>
+                                    </div>
+                                </div>
+                                <div class="align-self-start flex-grow-1 pt-2" style="text-align: right;">
+                                    {% if single_video['local_id'] %}
+                                        <span><i class="iconfont icon-archive text-success"></i></span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+        
+        <ul class="pagination justify-content-center mt-5">
+            <li class="page-item"><a class="page-link" href="{{ url_for('videos.videos', page=1) }}">First</a></li>
+            {% if current_page > 1 %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('videos.videos', page=current_page-1) }}">Prev</a></li>
+            {% else %}
+                <li class="page-item disabled"><a class="page-link" href="#">Prev</a></li>
+            {% endif %}
+
+            {% for i in pagination_list %}
+                <li id="page-tag-{{ i }}" class="page-item"><a class="page-link" href="{{ url_for('videos.videos', page=i) }}">{{ i }}</a></li>
+            {% endfor %}
+
+            {% if current_page != page_num %}
+                <li class="page-item"><a class="page-link" href="{{ url_for('videos.videos', page=current_page+1) }}">Next</a></li>
+            {% else %}
+                <li class="page-item disabled"><a class="page-link" href="#">Next</a></l>
+            {% endif %}
+                
+            <li class="page-item"><a class="page-link" href="{{ url_for('videos.videos', page=page_num) }}">Last</a></li>
+        </ul>
+
+    </div>
+
+
+    <div class="col-sm-1"></div>
+
+</div>
+
+
+
+
+
+<!--
     <table>
         {% for single_video in videos_on_page %}
             <tr>
@@ -35,5 +106,7 @@
             {% endfor %}
         </tr>
     </table>
-
+-->
+<script>set_page_active({{ current_page }})</script>
+<script src="{{ url_for('static', filename='scripts/single_channel.js') }}"></script>
 {% endblock %}
