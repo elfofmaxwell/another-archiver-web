@@ -69,7 +69,7 @@ def single_channel(channel_id, page):
             (channel_id, page_entry_num, (page-1)*page_entry_num)
         )
         videos_on_page = cur.fetchall()
-        pagination_list = get_pagination(current_page=page, page_num=page_num, pagination_length=5)
+        pagination_list = get_pagination(current_page=page, page_num=page_num, pagination_length=10)
         return render_template('channels/single_channel.html', channel_info=channel_info, page_num=page_num, current_page=page, pagination_list = pagination_list, video_num=video_num, videos_on_page=videos_on_page)
     finally: 
         cur.close()
@@ -116,7 +116,30 @@ def edit_talent(channel_id):
 
 # add talent name for videos without a known talent name
 @bp.route('/<channel_id>/add-talent-name')
+@login_required
 def add_talent_name(channel_id): 
     add_name(channel_id)
     flash('Talent name added to all videos without a known talent name list. ')
     return redirect(url_for('channels.single_channel', channel_id=channel_id))
+
+
+# delete channel
+@bp.route('/<channel_id>/delete-channel')
+@login_required
+def delete_channel(channel_id): 
+    print('Get delete signal: %s' % channel_id)
+    db = get_db()
+    cur = db.cursor()
+    try: 
+        cur.execute('SELECT video_id FROM video_list WHERE channel_id=?', (channel_id, ))
+        video_id_list = [i['video_id'] for i in cur.fetchall()]
+        for video_id in video_id_list: 
+            cur.execute('DELETE FROM talent_participation WHERE video_id=?', (video_id, ))
+            cur.execute('DELETE FROM stream_type WHERE video_id=?', (video_id, ))
+            cur.execute('DELETE FROM local_videos WHERE video_id=?', (video_id, ))
+            cur.execute('DELETE FROM video_list WHERE video_id=?', (video_id, ))
+        cur.execute('DELETE FROM channel_list WHERE channel_id=?', (channel_id, ))
+        db.commit()
+        return redirect(url_for('channels.channels'))
+    finally: 
+        cur.close()

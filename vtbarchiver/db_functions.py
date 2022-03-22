@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 import sqlite3
+from functools import reduce
 
 import click
 from flask import current_app, g
@@ -38,4 +39,44 @@ def init_db_command():
     '''
     init_db()
     click.echo('Database created/reinitialized')
+
+
+def full_text_search(table_name: str, column_name: str, search_key: str) -> list: 
+    '''
+    Search with match method, return list of video_id
+    '''
+    db = get_db()
+    cur = db.cursor()
+    try: 
+        cur.execute('SELECT video_id FROM ? WHERE ? MATCH "?" ORDER BY rank', (table_name, column_name, search_key))
+        searched_results = [i['video_id'] for i in cur.fetchall()]
+        return searched_results
+    finally: 
+        cur.close()
+
+
+def find_common_items(*lists_for_reduction): 
+    def find_common_2(list1, list2): 
+        return list(set(list1).intersection(list2))
+    return reduce(find_common_2, lists_for_reduction)
+
+
+def find_tags(table_name: str, column_name: str, tag_list: list) -> list:
+    '''
+    tag list: list of strings of tags to be find in column_name of table_name
+    '''
+    db = get_db()
+    cur = db.cursor()
+    result_list_set = []
+    try: 
+        for tag in tag_list: 
+            cur.execute("SELECT video_id FROM ? WHERE ?=?", (table_name, column_name, tag))
+            result_list = [i['video_id'] for i in cur.fetchall()]
+            result_list_set.append(result_list)
+        reduced_result_list = find_common_items(*result_list_set)
+        return reduced_result_list
+    finally:
+        cur.close()
+
+
 

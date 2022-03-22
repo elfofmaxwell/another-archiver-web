@@ -119,6 +119,7 @@ def fetch_uploaded_list(channel_id: str):
                     single_video_info.duration = duration_response['items'][0]['contentDetails']['duration']
 
                     cur.execute('INSERT INTO video_list (video_id, title, upload_date, duration, channel_id, thumb_url) VALUES (?, ?, ?, ?, ?, ?)', (single_video_info.video_id, single_video_info.title, single_video_info.upload_date, single_video_info.duration, channel_id, single_video_info.thumb_url))
+                    cur.execute('INSERT INTO search_video (video_id, title) VALUES (?, ?)', (single_video_info.video_id, single_video_info.title))
             if all_new_fetched: 
                 break
             request = youtube.playlistItems().list_next(request, response)

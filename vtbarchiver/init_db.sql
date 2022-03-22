@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS channel_list;
 DROP TABLE IF EXISTS video_list;
+DROP TABLE IF EXISTS search_video;
 DROP TABLE IF EXISTS talent_participation;
 DROP TABLE IF EXISTS stream_type;
 DROP TABLE IF EXISTS local_videos;
@@ -25,6 +26,9 @@ CREATE TABLE video_list (
     upload_idx INTEGER NOT NULL DEFAULT 0, 
     thumb_url TEXT NOT NULL
 );
+
+
+CREATE VIRTUAL TABLE search_video USING fts5(video_id, title);
 
 
 CREATE TABLE talent_participation (

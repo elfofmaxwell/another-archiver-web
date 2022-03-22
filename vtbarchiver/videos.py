@@ -36,7 +36,7 @@ def videos(page):
             (page_entry_num, (page-1)*page_entry_num)
         )
         videos_on_page = cur.fetchall()
-        pagination_list = get_pagination(current_page=page, page_num=page_num, pagination_length=5)
+        pagination_list = get_pagination(current_page=page, page_num=page_num, pagination_length=10)
         return render_template('videos/videos.html', page_num=page_num, pagination_list = pagination_list, current_page=page, videos_on_page=videos_on_page)
     finally: 
         cur.close()

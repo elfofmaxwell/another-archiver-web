@@ -9,13 +9,13 @@ from vtbarchiver.db_functions import get_db
 def scan_local_videos(video_dir): 
     db = get_db()
     cur = db.cursor()
+    local_videos_ids = []
     try: 
         for root_path, dir_names, file_names in os.walk(video_dir): 
             for file_name_full in file_names: 
                 file_name, file_ext = os.path.splitext(file_name_full)
                 if file_ext.lower() in ('.mp4', '.webm'): 
                     pseudo_vid = file_name[-12:-1]
-                    print(pseudo_vid)
                     cur.execute('SELECT id FROM video_list WHERE video_id=?', (pseudo_vid, ))
                     if cur.fetchall(): 
                         video_id = pseudo_vid
@@ -29,7 +29,14 @@ def scan_local_videos(video_dir):
                             """, 
                             (video_id, video_path, video_path)
                         )
-                        db.commit()
+                        local_videos_ids.append(video_id)
+        cur.execute("SELECT video_id FROM local_videos")
+        recorded_video_ids = [i['video_id'] for i in cur.fetchall()]
+        for recorded_video_id in recorded_video_ids: 
+            if recorded_video_id not in local_videos_ids: 
+                cur.execute("DELETE FROM local_videos WHERE video_id=?", (recorded_video_id, ))
+        db.commit()
+
     finally: 
         cur.close()
 

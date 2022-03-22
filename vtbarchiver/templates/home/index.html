@@ -2,9 +2,23 @@
 
 {% block title %}Home{% endblock %}
 
-{% block header %}About{% endblock %}
-
 {% block content %}
-    Yet another VTuber archiver. 
-    <p><img src="{{ url_for('static', filename='pictures/20220101_02.jpg') }}" alt="demo" style="width: 50%;" /></p>
+<div class="row">
+    <div class="col-sm-1"></div>
+
+    <div class="col-sm-10">
+        <h2>About</h2>
+        <div class="mt-2">
+            <p>
+                This is an archive station for Suisei Hoshimachi, a virtual YouTuber famous for her beautiful voice and inspirational experience. The target of this site is to prevent her videos from being deleted on YouTube due to copyright claims or any other unpredictable circumstances. The idea to build this site is inspired by Mr. Aozaki, an admirable Hoshiyomi (fan of Miss Hoshimachi). 
+            </p>
+            <p>
+                Please do not advertise this site or use spider to massively download videos, thank you very much for your coorperation. 
+            </p>
+        </div>
+    </div>
+
+    <div class="col-sm-1"></div>
+</div>
+
 {% endblock %}
