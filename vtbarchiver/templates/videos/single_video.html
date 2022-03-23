@@ -55,7 +55,7 @@
             <div class="mt-2">
                 {% for single_talent_name in participators.split(',') %}
                     {% if single_talent_name %}
-                        <span class="talent-badge mx-1" style="display: inline-block;">{{ single_talent_name }}</span>
+                        <span class="talent-badge m-1" style="display: inline-block;">{{ single_talent_name }}</span>
                     {% endif %}
                 {% endfor %}
                 {% if g.user %}
@@ -68,7 +68,7 @@
             <div class="mt-2">
                 {% for single_stream_type in stream_type.split(',') %}
                     {% if single_stream_type %}
-                        <span class="talent-badge mx-1">{{ single_stream_type }}</span>
+                        <span class="type-badge m-1">{{ single_stream_type }}</span>
                     {% endif %}
                 {% endfor %}
                 {% if g.user %}

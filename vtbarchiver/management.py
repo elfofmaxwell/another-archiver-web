@@ -8,12 +8,12 @@ import os
 
 import click
 import yaml
-from flask import (current_app, g, Blueprint, flash, redirect, render_template, request, session, url_for)
+from flask import (current_app, g, Blueprint, flash, redirect, render_template, request, session, url_for, jsonify)
 from flask.cli import with_appcontext
 from werkzeug.security import generate_password_hash, check_password_hash
 import psutil
 
-from vtbarchiver.db_functions import get_db
+from vtbarchiver.db_functions import get_db, tag_suggestions
 from vtbarchiver.download_functions import check_lock
 from vtbarchiver.local_file_management import scan_local_videos, get_relpath_to_static
 
@@ -154,6 +154,13 @@ def scan_local():
     return redirect(url_for('management.settings'))
 
 
+@bp.route('/_get-tag-suggestion')
+def get_tag_suggestion(): 
+    tag_type = request.args.get('tag-type', '')
+    query_str = request.args.get('query-str', '')
+    return jsonify(suggestions=tag_suggestions(tag_type, query_str))
+
+
 
 # use cli to add admin user
 @click.command('add-admin')
@@ -185,3 +192,4 @@ def add_admin_command():
         else: 
             break
     print('New admin added. ')
+

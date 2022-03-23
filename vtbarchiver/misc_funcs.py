@@ -11,3 +11,12 @@ def get_pagination(current_page, page_num, pagination_length):
     elif tmp_pagination_list[-1] > page_num: 
         pagination_list = [i - (tmp_pagination_list[-1]-page_num) for i in tmp_pagination_list]
     return pagination_list
+
+class Pagination(): 
+    def __init__(self, current_page, page_num, pagination_length) -> None:
+        self.list = get_pagination(current_page, page_num, pagination_length)
+        self.active_page = current_page
+        self.links = []
+        self.first_link = ''
+        self.last_link = ''
+    

@@ -28,7 +28,7 @@ CREATE TABLE video_list (
 );
 
 
-CREATE VIRTUAL TABLE search_video USING fts5(video_id, title);
+CREATE VIRTUAL TABLE search_video USING fts5(video_id, title, tagged_title, talents, stream_type);
 
 
 CREATE TABLE talent_participation (

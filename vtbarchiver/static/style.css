@@ -31,6 +31,15 @@ tags.customized-tag-field {
     display: none;
   }
 
+tags.tagify {
+    background-color: white;
+    color: #636971;
+}
+
+input.form-control::placeholder {
+    color: #8f8f8f;
+}
+
 .read-only-tags {
     --readonly-striped: 0;
     --tags-bg: #FCFAF2;
@@ -38,7 +47,7 @@ tags.customized-tag-field {
     display: inline-block;
 }
 
-.talent-badge {
+.talent-badge, .type-badge {
     padding: 0.1em 0.5em;
     background-color: #f7f7f7;
     border-style: solid;
@@ -48,8 +57,9 @@ tags.customized-tag-field {
     display: inline-block;
 }
 
-.talent-badge:hover {
+.talent-badge:hover, .type-badge:hover {
     background-color: #ededed;
+    cursor: pointer;
 }
 
 .add-badge :hover {

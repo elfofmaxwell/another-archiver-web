@@ -51,3 +51,43 @@ function parse_duration () {
     console.log(parsed_time_list)
     $(this).text(parsed_str)
 }
+
+
+function parse_tag_list (tagify_obj, submit_input_jq_obj) {
+    let tag_value = tagify_obj.value;
+    let single_tag;
+    let tag_name_list = [];
+    for (single_tag of tag_value) {
+        tag_name_list.push(single_tag.value);
+    }
+    let parsed_str = tag_name_list.join(',');
+    submit_input_jq_obj.val(parsed_str);
+}
+
+
+function tag_href (tag_type, tag_value) {
+    return '/videos/search?'+tag_type+'='+encodeURIComponent(tag_value);
+}
+
+
+function tagify_ajax_wrapper (tagify_obj, tag_type) {
+    function input_ajax (e) {
+        let input_value = e.detail.value;
+        tagify_obj.whitelist = null;
+
+        controller && controller.abort();
+        controller = new AbortController();
+        
+        tagify_obj.loading(true).dropdown.hide();
+
+        $.getJSON('/management/_get-tag-suggestion', {
+            "tag-type": tag_type, 
+            "query-str": input_value
+        }).done( function (parsed_data) {
+            tagify_obj.whitelist = parsed_data.suggestions;
+            tagify_obj.loading(false).dropdown.show(input_value);
+        })
+        
+    }
+    return input_ajax;
+}
