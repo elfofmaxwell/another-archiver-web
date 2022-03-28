@@ -2,11 +2,12 @@
 
 {% block title %}{{ video_info['title'] }}{% endblock %}
 
-{% block content %}
+{% block head_links %}
 <script src="https://unpkg.com/@yaireo/tagify"></script>
 <script src="https://unpkg.com/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
+{% endblock %}
 
-
+{% block content %}
 <div class="row">
 
     <div class="col-sm-12">
@@ -164,10 +165,8 @@
     </div>
 {% endif %}
 
+{% endblock %}
 
-
-
-
-
-    <script src="{{ url_for('static', filename='scripts/single_video.js') }}"></script>
+{% block end_body %}
+<script src="{{ url_for('static', filename='scripts/single_video.js') }}"></script>
 {% endblock %}

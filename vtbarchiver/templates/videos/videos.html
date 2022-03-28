@@ -2,16 +2,15 @@
 
 {% block title %}Videos{% endblock %}
 
-
-{% block content %}
+{% block head_links %}
 <script src="https://unpkg.com/@yaireo/tagify"></script>
 <script src="https://unpkg.com/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
 <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
 <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
+{% endblock %}
 
-
-
+{% block content %}
 <div class="row">
     <div class="col-sm-1"></div>
 
@@ -85,11 +84,11 @@
         </div>
         
         <ul class="pagination justify-content-center mt-5">
-            <li class="page-item"><a class="page-link" href="{{ pagination.links[0] }}">First</a></li>
+            <li class="page-item"><a class="page-link" href="{{ pagination.links[0] }}">&lt;&lt;</a></li>
             {% if pagination.active_page > 1 %}
-                <li class="page-item"><a class="page-link" href="{{ pagination.links[pagination.list.index(pagination.active_page)-1] }}">Prev</a></li>
+                <li class="page-item"><a class="page-link" href="{{ pagination.links[pagination.list.index(pagination.active_page)-1] }}">&lt;</a></li>
             {% else %}
-                <li class="page-item disabled"><a class="page-link" href="#">Prev</a></li>
+                <li class="page-item disabled"><a class="page-link" href="#">&lt;</a></li>
             {% endif %}
 
             {% for i in range(pagination.list|length) %}
@@ -97,12 +96,12 @@
             {% endfor %}
 
             {% if pagination.active_page != page_num %}
-                <li class="page-item"><a class="page-link" href="{{ pagination.links[pagination.list.index(pagination.active_page)+1] }}">Next</a></li>
+                <li class="page-item"><a class="page-link" href="{{ pagination.links[pagination.list.index(pagination.active_page)+1] }}">&gt;</a></li>
             {% else %}
-                <li class="page-item disabled"><a class="page-link" href="#">Next</a></l>
+                <li class="page-item disabled"><a class="page-link" href="#">&gt;</a></l>
             {% endif %}
                 
-            <li class="page-item"><a class="page-link" href="{{ pagination.links[-1] }}">Last</a></li>
+            <li class="page-item"><a class="page-link" href="{{ pagination.links[-1] }}">&gt;&gt;</a></li>
         </ul>
 
     </div>
@@ -150,5 +149,9 @@
         </tr>
     </table>
 -->
+
+{% endblock %}
+
+{% block end_body %}
 <script src="{{ url_for('static', filename='scripts/videos.js') }}"></script>
 {% endblock %}

@@ -1,15 +1,18 @@
 # -*- coding: utf-8 -*-
 
-from math import ceil
-import urllib.parse
 import datetime
+import urllib.parse
+from math import ceil
 
-from flask import (current_app, g, Blueprint, flash, redirect, render_template, request, url_for)
-from sudachipy import tokenizer, dictionary
+from flask import (Blueprint, current_app, flash, g, redirect, render_template,
+                   request, url_for)
+from sudachipy import dictionary, tokenizer
 
-from vtbarchiver.db_functions import get_db, find_tags, find_common_items, full_text_search, time_range_filter
-from vtbarchiver.management import login_required
+from vtbarchiver.db_functions import (find_common_items, find_tags,
+                                      full_text_search, get_db,
+                                      time_range_filter)
 from vtbarchiver.local_file_management import get_relpath_to_static
+from vtbarchiver.management import login_required
 from vtbarchiver.misc_funcs import Pagination
 
 bp = Blueprint('videos', __name__, url_prefix='/videos')
@@ -39,7 +42,7 @@ def videos(page):
             (page_entry_num, (page-1)*page_entry_num)
         )
         videos_on_page = cur.fetchall()
-        pagination = Pagination(current_page=page, page_num=page_num, pagination_length=10)
+        pagination = Pagination(current_page=page, page_num=page_num, pagination_length=5)
         pagination.links = [url_for('videos.videos', page=i) for i in pagination.list]
         pagination.first_link = url_for('videos.videos', page=1)
         pagination.last_link = url_for('videos.videos', page=page_num)
@@ -198,10 +201,11 @@ def search_video():
             'talents': talent_str, 
             'tags': tag_str, 
             'search-keys': search_keys, 
+            'time-range': time_range_str,
             'page': page, 
             'time-descending': str(time_descending).lower()
         }
-        pagination = Pagination(current_page=page, page_num=page_num, pagination_length=10)
+        pagination = Pagination(current_page=page, page_num=page_num, pagination_length=5)
         for each_page in pagination.list: 
             pagination_params['page'] = each_page
             pagination.links.append(url_for('videos.search_video')+'?'+urllib.parse.urlencode(pagination_params))

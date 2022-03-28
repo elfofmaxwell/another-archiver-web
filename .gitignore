@@ -133,3 +133,10 @@ dmypy.json
 
 # personal things
 vtbarchiver/static/videos
+vtbarchiver/refresh_token.json
+vtbarchiver/secrets.json
+
+# node
+node_modules
+package-lock.json
+package.json

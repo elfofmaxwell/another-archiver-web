@@ -76,3 +76,15 @@ input.form-control::placeholder {
     color: rgba(255, 255, 255, 0.8);
     font-size: 0.9em;
 }
+
+.stats-filter:focus {
+    box-shadow: none;
+}
+
+.chart-title {
+    width: 100%;
+    text-align: center;
+    font-size: 1.1em;
+    color: rgb(102, 102, 102);
+    margin-bottom: 0.3em;
+}

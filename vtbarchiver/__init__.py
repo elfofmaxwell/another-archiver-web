@@ -25,12 +25,8 @@ def create_app(test_config=None):
     except OSError: 
         pass
 
-    from vtbarchiver import db_functions
-    from vtbarchiver import management
-    from vtbarchiver import home
-    from vtbarchiver import channels
-    from vtbarchiver import videos
-    from vtbarchiver import download_functions
+    from vtbarchiver import (api, channels, db_functions, download_functions,
+                             home, management, videos)
 
     app.teardown_appcontext(db_functions.close_db)
     app.cli.add_command(db_functions.init_db_command)
@@ -41,5 +37,6 @@ def create_app(test_config=None):
     app.register_blueprint(home.bp)
     app.register_blueprint(channels.bp)
     app.register_blueprint(videos.bp)
+    app.register_blueprint(api.bp)
 
     return app

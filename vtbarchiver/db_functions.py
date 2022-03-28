@@ -1,11 +1,16 @@
 # -*- coding: utf-8 -*-
 
+import datetime
 import sqlite3
 from functools import reduce
 
 import click
 from flask import current_app, g
 from flask.cli import with_appcontext
+
+from vtbarchiver.misc_funcs import (calculate_date_from_delta, parse_duration,
+                                    to_isoformat, week_stops)
+
 
 def get_db(): 
     # get a db connection for each request (each g) at set path for the database
@@ -114,3 +119,244 @@ def tag_suggestions(tag_type: str, query_str: str):
         return suggestion_list
     finally: 
         cur.close()
+
+
+class ChannelStats(): 
+    def __init__(self, channel_id) -> None:
+        self.channel_id = channel_id
+        self.time_origin = "1970-01-01T00:00:00Z"
+    
+    def get_time_stamp(self, time_delta, lower_date_stamp_input, upper_date_stamp_input): 
+        if time_delta <= 0: 
+            lower_date_stamp = self.time_origin
+            if lower_date_stamp_input: 
+                lower_date_stamp = lower_date_stamp_input
+            if upper_date_stamp_input: 
+                upper_date_stamp = upper_date_stamp_input
+            else: 
+                upper_date_stamp = to_isoformat(datetime.datetime.utcnow())
+        else: 
+            lower_date_stamp = calculate_date_from_delta(time_delta)
+            upper_date_stamp = to_isoformat(datetime.datetime.utcnow())
+        
+        return lower_date_stamp, upper_date_stamp
+
+    def talents_stats(self, time_delta=0, lower_date_stamp='', upper_date_stamp=''): 
+        '''
+        return a statistic for talents: list of dictionaries "talent_name": appeared times, with one "solo": times
+        lower date stamp and upper date stamp left for possible update, not actually used. 
+        '''
+        db = get_db()
+        cur = db.cursor()
+        
+        lower_date_stamp, upper_date_stamp = self.get_time_stamp(time_delta, lower_date_stamp, upper_date_stamp)
+
+        try: 
+            cur.execute('SELECT talent_name FROM channel_list WHERE channel_id=?', (self.channel_id, ))
+            channel_talent_name = cur.fetchone()['talent_name']
+            cur.execute(
+                '''
+                SELECT tp.talent_name talent_name, COUNT(*) num 
+                FROM talent_participation tp 
+                JOIN video_list vl 
+                ON tp.video_id = vl.video_id
+                WHERE vl.channel_id = ? and vl.upload_date > ? AND vl.upload_date < ?
+                GROUP BY tp.talent_name
+                '''
+            , (self.channel_id, lower_date_stamp, upper_date_stamp))
+            talent_count_results = cur.fetchall()
+            talent_count_dict = {
+                "talent_name": [], 
+                "num": [], 
+            }
+            for i in talent_count_results: 
+                if i['talent_name'] != channel_talent_name: 
+                    talent_count_dict['talent_name'].append(i['talent_name'])
+                    talent_count_dict['num'].append(i['num'])
+            cur.execute(
+                '''
+                SELECT tp.video_id talent_name, COUNT(*) num 
+                FROM talent_participation tp 
+                JOIN video_list vl 
+                ON tp.video_id = vl.video_id 
+                WHERE vl.channel_id = ? AND vl.upload_date > ? AND vl.upload_date < ?
+                GROUP BY tp.video_id 
+                HAVING COUNT(*)=1;
+                ''', (self.channel_id, lower_date_stamp, upper_date_stamp)
+            )
+            talent_count_dict['talent_name'].append('solo')
+            talent_count_dict['num'].append(len(cur.fetchall()))
+            return talent_count_dict
+
+        #except: 
+        #    return {}
+
+        finally: 
+            cur.close()
+
+    
+    def tag_stats(self, time_delta=0, lower_date_stamp='', upper_date_stamp=''): 
+        '''
+        stats on tags, return a list of dictionaries "tag_name": appeared times, with one "unknown": video number (number of videos without tags)
+        '''
+        db = get_db()
+        cur = db.cursor()
+        lower_date_stamp, upper_date_stamp = self.get_time_stamp(time_delta, lower_date_stamp, upper_date_stamp)
+        try: 
+            cur.execute(
+                '''
+                SELECT st.stream_type stream_type, COUNT(*) num 
+                FROM stream_type st 
+                JOIN video_list vl 
+                ON st.video_id = vl.video_id
+                WHERE vl.channel_id = ? and vl.upload_date > ? AND vl.upload_date < ?
+                GROUP BY st.stream_type
+                '''
+            , (self.channel_id, lower_date_stamp, upper_date_stamp))
+            type_count_results = cur.fetchall()
+            type_count_dict = {
+                "stream_type": [i['stream_type'] for i in type_count_results], 
+                "num": [i['num'] for i in type_count_results], 
+            }
+            
+            cur.execute(
+                '''
+                SELECT COUNT(*) num
+                FROM video_list vl
+                LEFT OUTER JOIN stream_type st
+                ON vl.video_id = st.video_id
+                WHERE (st.video_id IS NULL) AND vl.channel_id=? AND vl.upload_date > ? AND vl.upload_date < ?
+                ''', (self.channel_id, lower_date_stamp, upper_date_stamp)
+            )
+            type_count_dict['stream_type'].append("unknown")
+            type_count_dict['num'].append(cur.fetchone()['num'])
+
+            return type_count_dict
+        
+        #except: 
+        #    return {}
+
+        finally: 
+            cur.close()
+
+    def duration_stats(self, time_delta=0, lower_date_stamp='', upper_date_stamp=''): 
+        '''
+        return list of dict: {start_date_of_week: stream_duration_in_second_that_week}
+        '''
+        db = get_db()
+        cur = db.cursor()
+        duration_dict = {"week": [], "duration": []}
+        current_time = datetime.datetime.utcnow()
+        try: 
+            if time_delta > 0: 
+                upper_date_stamp = to_isoformat(current_time)
+                earlist_query_date = to_isoformat(current_time - datetime.timedelta(weeks=time_delta//7))
+            else: 
+                if lower_date_stamp: 
+                    earlist_query_date = lower_date_stamp
+                else: 
+                    cur.execute('SELECT upload_date FROM video_list WHERE channel_id = ? ORDER BY upload_date', (self.channel_id, ))
+                    earlist_query_date = cur.fetchone()['upload_date']
+                if not upper_date_stamp: 
+                    upper_date_stamp = to_isoformat(current_time)
+            
+
+            week_stop_list = week_stops(earlist_query_date, upper_date_stamp)
+            for i in range(len(week_stop_list)-1): 
+                cur.execute(
+                    '''
+                    SELECT video_id, duration FROM video_list WHERE channel_id = ? AND upload_date > ? AND upload_date < ?
+                    ''', (self.channel_id, week_stop_list[i], week_stop_list[i+1])
+                )
+                week_duration_list = list(map(parse_duration, [i['duration'] for i in cur.fetchall()]))
+                if week_duration_list: 
+                    week_duration_sec = reduce(lambda duration_1, duration_2: duration_1+duration_2, week_duration_list)
+                else: 
+                    week_duration_sec = 0
+                duration_dict['week'].append(week_stop_list[i])
+                duration_dict['duration'].append(week_duration_sec)
+            
+            return duration_dict
+        
+        #except: 
+        #    return {}
+
+        finally: 
+            cur.close()
+    
+    def duration_distr(self, time_delta=0, lower_date_stamp='', upper_date_stamp=''):
+        '''
+        return list of dict: distribution of video length, <30min, 30-60, 60-90, 90-120, 120-150, 150-180, 180-
+        '''
+        def duration_filter_factory(min_duration, max_duration = -1): 
+            if max_duration > 0:
+                def duration_filter(duration_sec): 
+                    return (duration_sec >= min_duration and duration_sec < max_duration)
+            else: 
+                def duration_filter(duration_sec): 
+                    return (duration_sec >= min_duration)
+            return duration_filter
+
+        db = get_db()
+        cur = db.cursor()
+        duration_distr = {"duration": [], "num": []}
+        lower_date_stamp, upper_date_stamp = self.get_time_stamp(time_delta, lower_date_stamp, upper_date_stamp)
+        try: 
+            cur.execute(
+                '''
+                SELECT duration FROM video_list WHERE channel_id = ? AND upload_date > ? AND upload_date < ?
+                ''', (self.channel_id, lower_date_stamp, upper_date_stamp)
+            )
+            duration_list = list(map(parse_duration, [i['duration'] for i in cur.fetchall()]))
+            for i in range(6): 
+                duration_distr['duration'].append("ls"+str((i+1)*30))
+                duration_distr['num'].append(len(list(filter(duration_filter_factory(i*1800, (i+1)*1800), duration_list))))
+            duration_distr['duration'].append("gt180")
+            duration_distr['num'].append(len(list(filter(duration_filter_factory(10800), duration_list))))
+            return duration_distr
+
+        #except: 
+        #    return {}
+
+        finally: 
+            cur.close()
+
+
+    def video_num_stats(self, time_delta=0, lower_date_stamp='', upper_date_stamp=''): 
+        '''
+        return list of dict: {start_date_of_week: video_num_that_week}
+        '''
+        db = get_db()
+        cur = db.cursor()
+        num_dict = {"week": [], "num": []}
+        current_time = datetime.datetime.utcnow()
+        try: 
+            if time_delta > 0: 
+                upper_date_stamp = to_isoformat(current_time)
+                earlist_query_date = to_isoformat(current_time - datetime.timedelta(weeks=time_delta//7))
+            else: 
+                if lower_date_stamp: 
+                    earlist_query_date = lower_date_stamp
+                else: 
+                    cur.execute('SELECT upload_date FROM video_list WHERE channel_id = ? ORDER BY upload_date', (self.channel_id, ))
+                    earlist_query_date = cur.fetchone()['upload_date']
+                if not upper_date_stamp: 
+                    upper_date_stamp = to_isoformat(current_time)
+
+            week_stop_list = week_stops(earlist_query_date, upper_date_stamp)
+            for i in range(len(week_stop_list)-1): 
+                cur.execute(
+                    '''
+                    SELECT COUNT(*) num FROM video_list WHERE channel_id = ? AND upload_date > ? AND upload_date < ?
+                    ''', (self.channel_id, week_stop_list[i], week_stop_list[i+1])
+                )
+                num_dict['week'].append(week_stop_list[i])
+                num_dict['num'].append(cur.fetchone()['num'])
+            
+            return num_dict
+
+        #except: 
+        #    return {}
+        
+        finally: 
+            cur.close()

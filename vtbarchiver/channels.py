@@ -1,15 +1,16 @@
 # -*- coding: utf-8 -*-
 
 from math import ceil
-from flask import (current_app, g, Blueprint, flash, redirect, render_template, request, url_for)
+
+from flask import (Blueprint, current_app, flash, g, redirect, render_template,
+                   request, url_for)
 
 from vtbarchiver.channel_records import fetch_channel, update_checkpoint
 from vtbarchiver.db_functions import get_db
-from vtbarchiver.fetch_video_list import fetch_all, fetch_uploaded_list
 from vtbarchiver.fetch_video_list import add_talent_name as add_name
+from vtbarchiver.fetch_video_list import fetch_all, fetch_uploaded_list
 from vtbarchiver.management import login_required
 from vtbarchiver.misc_funcs import Pagination
-
 
 bp = Blueprint('channels', __name__, url_prefix='/channels')
 
@@ -69,7 +70,7 @@ def single_channel(channel_id, page):
             (channel_id, page_entry_num, (page-1)*page_entry_num)
         )
         videos_on_page = cur.fetchall()
-        pagination = Pagination(current_page=page, page_num=page_num, pagination_length=10)
+        pagination = Pagination(current_page=page, page_num=page_num, pagination_length=5)
         pagination.links = [url_for('channels.single_channel', channel_id=channel_id, page=i) for i in pagination.list]
         return render_template('channels/single_channel.html', channel_info=channel_info, page_num=page_num, pagination = pagination, video_num=video_num, videos_on_page=videos_on_page)
     finally: 
