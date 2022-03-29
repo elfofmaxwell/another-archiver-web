@@ -1,17 +1,17 @@
 # -*- coding: utf8 -*- 
 
-import os
 import json
+import os
 
-
+import google_auth_oauthlib
 import googleapiclient.discovery
 import googleapiclient.errors
-import google_auth_oauthlib
 from flask import current_app
-from sudachipy import tokenizer, dictionary
 
 from vtbarchiver.channel_records import fetch_channel
 from vtbarchiver.db_functions import get_db
+from vtbarchiver.misc_funcs import tag_title
+
 
 class VideoInfo(): 
     '''
@@ -120,9 +120,7 @@ def fetch_uploaded_list(channel_id: str):
 
                     cur.execute('INSERT INTO video_list (video_id, title, upload_date, duration, channel_id, thumb_url) VALUES (?, ?, ?, ?, ?, ?)', (single_video_info.video_id, single_video_info.title, single_video_info.upload_date, single_video_info.duration, channel_id, single_video_info.thumb_url))
 
-                    tokenizer_obj = dictionary.Dictionary().create()
-                    mode = tokenizer.Tokenizer.SplitMode.B
-                    tagged_title =' '.join([m.surface() for m in tokenizer_obj.tokenize(single_video_info.title, mode)])
+                    tagged_title = tag_title(single_video_info.title)
                     cur.execute('INSERT INTO search_video (video_id, title, tagged_title) VALUES (?, ?, ?)', (single_video_info.video_id, single_video_info.title, tagged_title))
             if all_new_fetched: 
                 break

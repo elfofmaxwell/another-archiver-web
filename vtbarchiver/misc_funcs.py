@@ -2,6 +2,7 @@
 import datetime
 
 import isodate
+from sudachipy import dictionary, tokenizer
 
 
 def get_pagination(current_page, page_num, pagination_length): 
@@ -58,3 +59,13 @@ def week_stops(start_date_str, end_date_str):
 
 def parse_duration(duration_str_pt): 
     return isodate.parse_duration(duration_str_pt).seconds
+
+
+def tag_title(title: str) -> str: 
+    '''
+    return tokenized title based on split mode A
+    '''
+    tokenizer_obj = dictionary.Dictionary().create()
+    mode = tokenizer.Tokenizer.SplitMode.A
+    tagged_title =' '.join([m.surface() for m in tokenizer_obj.tokenize(title, mode)])
+    return tagged_title

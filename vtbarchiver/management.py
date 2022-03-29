@@ -18,6 +18,7 @@ from vtbarchiver.db_functions import get_db, tag_suggestions
 from vtbarchiver.download_functions import check_lock
 from vtbarchiver.local_file_management import (get_relpath_to_static,
                                                scan_local_videos)
+from vtbarchiver.misc_funcs import tag_title
 
 bp = Blueprint('management', __name__, url_prefix='/management')
 
@@ -185,3 +186,31 @@ def add_admin_command():
             break
     print('New admin added. ')
 
+
+@click.command('reindex-search')
+@with_appcontext
+def regenerate_search_index(): 
+    db = get_db()
+    cur = db.cursor()
+    try: 
+        cur.execute('DELETE FROM search_video')
+        cur.execute('SELECT video_id, title FROM video_list')
+        video_list = cur.fetchall()
+        for single_video in video_list: 
+            cur.execute('SELECT talent_name FROM talent_participation WHERE video_id = ?', (single_video['video_id'], ))
+            talent_names = ';'.join([i['talent_name'] for i in cur.fetchall()])
+            cur.execute('SELECT stream_type FROM stream_type WHERE video_id = ?', (single_video['video_id'], ))
+            stream_type = ';'.join([i['stream_type'] for i in cur.fetchall()])
+            tagged_title = tag_title(single_video['title'])
+            cur.execute(
+                'INSERT INTO search_video (video_id, title, tagged_title, talents, stream_type) VALUES (?, ?, ?, ?, ?)', 
+                (single_video['video_id'], single_video['title'], tagged_title, talent_names, stream_type)
+                )
+    except: 
+        raise
+    else: 
+        click.echo('Search index reganerated. ')
+        db.commit()
+    finally: 
+        cur.close()
+            

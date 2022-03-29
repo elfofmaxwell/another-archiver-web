@@ -6,14 +6,13 @@ from math import ceil
 
 from flask import (Blueprint, current_app, flash, g, redirect, render_template,
                    request, url_for)
-from sudachipy import dictionary, tokenizer
 
 from vtbarchiver.db_functions import (find_common_items, find_tags,
                                       full_text_search, get_db,
                                       time_range_filter)
 from vtbarchiver.local_file_management import get_relpath_to_static
 from vtbarchiver.management import login_required
-from vtbarchiver.misc_funcs import Pagination
+from vtbarchiver.misc_funcs import Pagination, tag_title
 
 bp = Blueprint('videos', __name__, url_prefix='/videos')
 
@@ -156,9 +155,7 @@ def search_video():
         tag_result = find_tags('stream_type', 'stream_type', tag_list)
         list_for_reduction.append(tag_result)
     if search_keys: 
-        tokenizer_obj = dictionary.Dictionary().create()
-        mode = tokenizer.Tokenizer.SplitMode.B
-        tagged_keys = ' '.join([m.surface() for m in tokenizer_obj.tokenize(search_keys, mode)])
+        tagged_keys = tag_title(search_keys)
         tagged_search_result = full_text_search('search_video', tagged_keys)
         search_result = full_text_search('search_video', search_keys)
         combined_search_result = list(set(tagged_search_result + search_result))
