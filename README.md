@@ -1,11 +1,11 @@
 # another-archiver-web
 
-Yet another web app shares some functions with another-archiver. 
+Yet another web app shares some functions with another-archiver.
 
-TODO: 
+TODO:
 
-* Support unarchive videos and videos that are not in monitoring channels. 
+* Support unarchive videos and videos that are not in monitoring channels.
 
-* Add breadcrumbs. 
+* Add breadcrumbs.
 
-* Dark mode. 
+* Dark mode.

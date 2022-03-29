@@ -10,9 +10,91 @@ $(function() {
     const channel_id = location.pathname.split('/')[2];
 
     /* draw charts */
+
+    // external legend plugin
+    const getOrCreateLegendList = (chart, id) => {
+        const legendContainer = document.getElementById(id);
+        let listContainer = legendContainer.querySelector('ul');
+      
+        if (!listContainer) {
+            listContainer = document.createElement('ul');
+            listContainer.style.display = 'flex';
+            listContainer.style.flexDirection = 'row';
+            listContainer.style.flexWrap = 'wrap';
+            listContainer.style.margin = 0;
+            listContainer.style.padding = 0;
+
+            legendContainer.appendChild(listContainer);
+        }
+      
+        return listContainer;
+    };
+      
+    const htmlLegendPlugin = {
+        id: 'htmlLegend',
+        afterUpdate(chart, args, options) {
+            const ul = getOrCreateLegendList(chart, options.containerID);
+
+            // Remove old legend items
+            while (ul.firstChild) {
+                ul.firstChild.remove();
+            }
+
+            // Reuse the built-in legendItems generator
+            const items = chart.options.plugins.legend.labels.generateLabels(chart);
+
+            items.forEach(item => {
+                const li = document.createElement('li');
+                li.style.alignItems = 'center';
+                li.style.cursor = 'pointer';
+                li.style.display = 'flex';
+                li.style.flexDirection = 'row';
+                li.style.marginLeft = '10px';
+
+                li.onclick = () => {
+                    const {type} = chart.config;
+                    if (type === 'pie' || type === 'doughnut') {
+                    // Pie and doughnut charts only have a single dataset and visibility is per item
+                    chart.toggleDataVisibility(item.index);
+                    } else {
+                    chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
+                    }
+                    chart.update();
+                };
+
+                // Color box
+                const boxSpan = document.createElement('span');
+                boxSpan.style.background = item.fillStyle;
+                boxSpan.style.borderColor = item.strokeStyle;
+                boxSpan.style.borderWidth = item.lineWidth + 'px';
+                boxSpan.style.display = 'inline-block';
+                boxSpan.style.height = '10px';
+                boxSpan.style.marginRight = '5px';
+                boxSpan.style.width = '20px';
+
+                // Text
+                const textContainer = document.createElement('p');
+                textContainer.style.color = 'var(--bs-secondary)';
+                textContainer.style.fontSize = '0.9em';
+                textContainer.style.margin = 0;
+                textContainer.style.marginRight = '1em';
+                textContainer.style.padding = 0;
+                textContainer.style.textDecoration = item.hidden ? 'line-through' : '';
+
+                const text = document.createTextNode(item.text);
+                textContainer.appendChild(text);
+
+                li.appendChild(boxSpan);
+                li.appendChild(textContainer);
+                ul.appendChild(li);
+            });
+        }
+    };
+
+
     // generate default chart
-    function empty_chart (chart_ctx, chart_type) {
-        return new Chart(chart_ctx, {
+    function empty_chart (chart_ctx, chart_type, legend_id) {
+        let chart_config = {
             type: chart_type,
             data: {
                 labels: [], 
@@ -21,8 +103,24 @@ $(function() {
                 data: [],
                 backgroundColor: [],
                 }]
-            }
-        }); 
+            }, 
+        }
+
+        if (legend_id) {
+            chart_config.options = {
+                plugins: {
+                    htmlLegend: {
+                        containerID: legend_id, 
+                    }, 
+                    legend: {
+                        display: false, 
+                    },
+                }, 
+            }; 
+            chart_config.plugins = [htmlLegendPlugin];
+        }
+
+        return new Chart(chart_ctx, chart_config); 
     }
 
     function doughnut_color (color_num) {
@@ -35,10 +133,10 @@ $(function() {
 
 
     const talent_chart_ctx = $('#talent-chart').get(0).getContext('2d'); 
-    const talent_chart= empty_chart(talent_chart_ctx, 'doughnut');
+    const talent_chart= empty_chart(talent_chart_ctx, 'doughnut', 'talent-chart-legends');
 
     const tag_chart_ctx = $('#tag-chart').get(0).getContext('2d'); 
-    const tag_chart= empty_chart(tag_chart_ctx, 'doughnut');
+    const tag_chart= empty_chart(tag_chart_ctx, 'doughnut', 'tag-chart-legends');
 
 
     const num_stats_ctx = $('#num-stats').get(0).getContext('2d');

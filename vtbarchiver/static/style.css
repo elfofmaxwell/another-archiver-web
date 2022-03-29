@@ -88,3 +88,8 @@ input.form-control::placeholder {
     color: rgb(102, 102, 102);
     margin-bottom: 0.3em;
 }
+
+.chart-legend {
+    margin-top: 0.5em;
+    margin-bottom: 1em;
+}

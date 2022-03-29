@@ -12,7 +12,7 @@
 
     <div class="col-sm-10">
 
-        
+        <!-- Channel info box -->
         <div class="bg-light shadow mx-auto mt-4">
             <div class="row mx-0">
                 <div class="col-sm-4 border-end my-4">
@@ -41,6 +41,7 @@
             </div>
         </div>
         
+        <!-- video/stats switcher-->
         <div class="mt-5">
             <ul class="nav nav-tabs justify-content-center">
                 <li class="nav-item">
@@ -52,6 +53,7 @@
             </ul>
         </div>
         
+        <!-- videos -->
         <div class="tab-content">
             <div class="tab-pane container active" id="channel-videos">
                 <div class="mt-3">
@@ -83,6 +85,7 @@
                     {% endfor %}
                 </div>
                 
+                <!-- video pagination -->
                 <ul class="pagination justify-content-center mt-5">
                     <li class="page-item"><a class="page-link" href="{{ url_for('channels.single_channel', channel_id=channel_info['channel_id'], page=1) }}">&lt;&lt;</a></li>
                     {% if pagination.active_page > 1 %}
@@ -105,6 +108,7 @@
                 </ul>
             </div>
 
+            <!-- channel stats -->
             <div class="tab-pane container fade" id="channel-stats">
                 <div class="mt-3">
                     <div class="d-flex justify-content-end">
@@ -117,10 +121,12 @@
                     </div>
                 <div class="mt-3">
                     <div class="chart-title">Collaborations</div>
+                    <div id="talent-chart-legends" class="chart-legend"></div>
                     <canvas id="talent-chart" width="400"></canvas>
                 </div>
                 <div class="mt-5">
                     <div class="chart-title">Stream Types</div>
+                    <div id="tag-chart-legends" class="chart-legend"></div>
                     <canvas id="tag-chart" width="400" height="400"></canvas>
                 </div>
                 <div class="mt-5">
