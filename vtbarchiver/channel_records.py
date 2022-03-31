@@ -1,47 +1,17 @@
 # -*- coding: utf-8 -*-
 
-import json
-import sqlite3
-import sys
-import os
-
-import googleapiclient.discovery
-import googleapiclient.errors
-import google_auth_oauthlib
-import yaml
 from flask import current_app
 
 from vtbarchiver.db_functions import get_db
+from vtbarchiver.misc_funcs import build_youtube_api
+
 
 def fetch_channel(channel_id): 
     '''
     args: channel_id (str)
     Create channel_list table and fetch channel info from youtube; initialize checkpoint at 0 (meaningful checkpoint starting at 1)
     '''
-    # set api credentials
-    scopes = ['https://www.googleapis.com/auth/youtube.force-ssl']
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "0"
-    api_service_name = "youtube"
-    api_version = "v3"
-    client_secrets_file = os.path.join(current_app.root_path, "secrets.json")
-    refresh_token_file = os.path.join(current_app.root_path, "refresh_token.json")
-    flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes)
-    # if no refresh token, request brand new token set
-    if not os.path.isfile(refresh_token_file): 
-        credentials = flow.run_console()
-        with open(refresh_token_file, 'w') as f: 
-            json.dump(credentials.refresh_token, f)
-    # if there is refresh token, use it to get new access token
-    else: 
-        with open(client_secrets_file) as f: 
-            client_info = json.load(f)
-        client_id = client_info["installed"]["client_id"]
-        with open(refresh_token_file) as f: 
-            refresh_token = json.load(f)
-        flow.oauth2session.refresh_token(flow.client_config['token_uri'], refresh_token=refresh_token, client_id=client_id, client_secret=flow.client_config['client_secret'])
-        credentials = google_auth_oauthlib.helpers.credentials_from_session(flow.oauth2session, flow.client_config)
-    # create api client
-    youtube = googleapiclient.discovery.build(api_service_name, api_version, credentials=credentials)
+    youtube = build_youtube_api()
     
 
     db = get_db()

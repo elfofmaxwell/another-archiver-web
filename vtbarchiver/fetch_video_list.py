@@ -1,16 +1,10 @@
 # -*- coding: utf8 -*- 
 
-import json
-import os
-
-import google_auth_oauthlib
-import googleapiclient.discovery
-import googleapiclient.errors
 from flask import current_app
 
 from vtbarchiver.channel_records import fetch_channel
 from vtbarchiver.db_functions import get_db
-from vtbarchiver.misc_funcs import tag_title
+from vtbarchiver.misc_funcs import build_youtube_api, tag_title
 
 
 class VideoInfo(): 
@@ -49,31 +43,7 @@ def fetch_uploaded_list(channel_id: str):
     Fetching uploaded video list from youtube for a given channel
     '''
 
-    # set api credentials
-    scopes = ['https://www.googleapis.com/auth/youtube.force-ssl']
-    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "0"
-    api_service_name = "youtube"
-    api_version = "v3"
-    client_secrets_file = os.path.join(current_app.root_path, "secrets.json")
-    refresh_token_file = os.path.join(current_app.root_path, "refresh_token.json")
-    flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes)
-    # if no refresh token, request brand new token set
-    if not os.path.isfile(refresh_token_file): 
-        credentials = flow.run_console()
-        with open(refresh_token_file, 'w') as f: 
-            json.dump(credentials.refresh_token, f)
-    # if there is refresh token, use it to get new access token
-    else: 
-        with open(client_secrets_file) as f: 
-            client_info = json.load(f)
-        client_id = client_info["installed"]["client_id"]
-        with open(refresh_token_file) as f: 
-            refresh_token = json.load(f)
-        flow.oauth2session.refresh_token(flow.client_config['token_uri'], refresh_token=refresh_token, client_id=client_id, client_secret=flow.client_config['client_secret'])
-        credentials = google_auth_oauthlib.helpers.credentials_from_session(flow.oauth2session, flow.client_config)
-    # create api client
-    youtube = googleapiclient.discovery.build(api_service_name, api_version, credentials=credentials)
-    
+    youtube = build_youtube_api()
 
     # connect to db 
     db = get_db()

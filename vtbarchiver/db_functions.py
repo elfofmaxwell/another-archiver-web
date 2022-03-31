@@ -360,3 +360,22 @@ class ChannelStats():
         
         finally: 
             cur.close()
+
+
+def get_new_hex_vid(): 
+    '''
+    check existing hex video ids for unarchived contents and return a new auto-increased one
+    '''
+    db = get_db()
+    cur = db.cursor()
+    try: 
+        cur.execute(r"SELECT video_id FROM video_list WHERE video_id LIKE '\_\_%\_\_' ESCAPE '\'")
+        existed_hex_vids = cur.fetchall()
+        if existed_hex_vids:
+            max_int_vid = max([int(i['video_id'].strip('_'), 16) for i in existed_hex_vids])
+        else: 
+            max_int_vid = 0
+        new_hex_vid = '__%#07x__'%(max_int_vid+1)
+        return new_hex_vid
+    finally: 
+        cur.close()

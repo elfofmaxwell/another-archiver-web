@@ -93,3 +93,18 @@ input.form-control::placeholder {
     margin-top: 0.5em;
     margin-bottom: 1em;
 }
+
+.block-border-label {
+    position: absolute; 
+    left: 0; 
+    top: 0; 
+    font-size: 0.9em; 
+    color: var(--bs-secondary);
+    transform: translate(5%, -50%); 
+    background-color: var(--bs-white); 
+    padding: 0 0.5em;
+}
+
+.setting-block {
+    position: relative;
+}

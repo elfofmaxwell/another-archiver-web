@@ -25,6 +25,7 @@
                     <a href="#search-area" data-bs-toggle="collapse" data-bs-target="#search-area" class="text-secondary" style="text-decoration: none;"><i class="iconfont icon-search"></i>Search</a>
                 </div>
             </div>
+            <!-- Searching -->
             <div id="search-area" class="collapse p-2 rounded-bottom" style="background-color: #ebebeb;">
                 <div class="mt-2"><input id="talent-search" placeholder="Talents" /></div>
                 <div class="mt-2"><input id="tag-search" placeholder="Stream type" /></div>
@@ -52,6 +53,7 @@
             {% if search_params_call_back %}
             
             {% endif %}
+            <!-- videos -->
             {% for single_video in videos_on_page %}
                 <div class="bg-light shadow-sm mx-auto my-2 border rounded-2" onclick="location.assign('{{ url_for('videos.single_video', video_id=single_video['video_id']) }}')" style="cursor: pointer;">
                     <div class="row mx-0">
@@ -83,6 +85,7 @@
             {% endif %}
         </div>
         
+        <!-- pagination -->
         <ul class="pagination justify-content-center mt-5">
             <li class="page-item"><a class="page-link" href="{{ pagination.links[0] }}">&lt;&lt;</a></li>
             {% if pagination.active_page > 1 %}
@@ -110,45 +113,6 @@
     <div class="col-sm-1"></div>
 
 </div>
-
-
-
-
-
-<!--
-    <table>
-        {% for single_video in videos_on_page %}
-            <tr>
-                <td>
-                    <img src="{{ single_video['thumb_url'] }}" style="height: 6em;" alt="Thumb" />
-                </td>
-                <td>
-                    <p><a href="{{ url_for('videos.single_video', video_id=single_video['video_id']) }}">{{ single_video['title'] }}</a></p>
-                    <p>{{ single_video['channel_name'] }}</p>
-                    <p>{{ single_video['upload_date'] }}</p>
-                    <p>
-                        {% if single_video['local_id'] %}
-                            Archived
-                        {% else %}
-                            Not archived
-                        {% endif %}
-                    </p>
-                </td>
-            </tr>
-        {% endfor %}
-    </table>
-
-
-    <table>
-        <tr>
-            {% for i in range(page_num) %}
-                <td>
-                    <a href="{{ url_for('videos.videos', page=i+1) }}">{{ i+1 }}</a>
-                </td>
-            {% endfor %}
-        </tr>
-    </table>
--->
 
 {% endblock %}
 

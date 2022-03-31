@@ -1,7 +1,13 @@
 # -*- coding: utf-8 -*-
 import datetime
+import json
+import os
 
+import google_auth_oauthlib
+import googleapiclient.discovery
+import googleapiclient.errors
 import isodate
+from flask import current_app, g
 from sudachipy import dictionary, tokenizer
 
 
@@ -69,3 +75,31 @@ def tag_title(title: str) -> str:
     mode = tokenizer.Tokenizer.SplitMode.A
     tagged_title =' '.join([m.surface() for m in tokenizer_obj.tokenize(title, mode)])
     return tagged_title
+
+
+def build_youtube_api():
+    # set api credentials
+    scopes = ['https://www.googleapis.com/auth/youtube.force-ssl']
+    os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "0"
+    api_service_name = "youtube"
+    api_version = "v3"
+    client_secrets_file = os.path.join(current_app.root_path, "secrets.json")
+    refresh_token_file = os.path.join(current_app.root_path, "refresh_token.json")
+    flow = google_auth_oauthlib.flow.InstalledAppFlow.from_client_secrets_file(client_secrets_file, scopes)
+    # if no refresh token, request brand new token set
+    if not os.path.isfile(refresh_token_file): 
+        credentials = flow.run_console()
+        with open(refresh_token_file, 'w') as f: 
+            json.dump(credentials.refresh_token, f)
+    # if there is refresh token, use it to get new access token
+    else: 
+        with open(client_secrets_file) as f: 
+            client_info = json.load(f)
+        client_id = client_info["installed"]["client_id"]
+        with open(refresh_token_file) as f: 
+            refresh_token = json.load(f)
+        flow.oauth2session.refresh_token(flow.client_config['token_uri'], refresh_token=refresh_token, client_id=client_id, client_secret=flow.client_config['client_secret'])
+        credentials = google_auth_oauthlib.helpers.credentials_from_session(flow.oauth2session, flow.client_config)
+    # create api client
+    youtube = googleapiclient.discovery.build(api_service_name, api_version, credentials=credentials)
+    return youtube

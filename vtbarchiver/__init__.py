@@ -31,8 +31,10 @@ def create_app(test_config=None):
     app.teardown_appcontext(db_functions.close_db)
     app.cli.add_command(db_functions.init_db_command)
     app.cli.add_command(management.add_admin_command)
-    app.cli.add_command(download_functions.download_channels_command)
+    #app.cli.add_command(download_functions.download_channels_command)
     app.cli.add_command(management.regenerate_search_index)
+    app.cli.add_command(download_functions.download_single_video)
+    app.cli.add_command(download_functions.download_channels_cmd)
     
     app.register_blueprint(management.bp)
     app.register_blueprint(home.bp)

@@ -1,4 +1,25 @@
 "use strict"; 
+
+// The DOM element you wish to replace with Tagify
+const talent_input = $('#new-video-talents').get(0); 
+const stream_type = $('#new-video-types').get(0); 
+
+// initialize Tagify on the above input node reference
+const talent_tags = new Tagify(talent_input, {whitelist: []});
+const stream_type_tags = new Tagify(stream_type, {whitelist: []});
+
+// ajax for tagify
+let controller;
+const talent_input_ajax = tagify_ajax_wrapper(talent_tags, 'talents');
+talent_tags.on('input', talent_input_ajax);
+
+const type_input_ajax = tagify_ajax_wrapper(stream_type_tags, 'tags');
+stream_type_tags.on('input', type_input_ajax);
+
+
+
+
+
 $(function() {
     format_upload_date();
 
@@ -55,9 +76,9 @@ $(function() {
                     const {type} = chart.config;
                     if (type === 'pie' || type === 'doughnut') {
                     // Pie and doughnut charts only have a single dataset and visibility is per item
-                    chart.toggleDataVisibility(item.index);
+                        chart.toggleDataVisibility(item.index);
                     } else {
-                    chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
+                        chart.setDatasetVisibility(item.datasetIndex, !chart.isDatasetVisible(item.datasetIndex));
                     }
                     chart.update();
                 };
@@ -228,4 +249,70 @@ $(function() {
     $('#stats-tab').click(() => {
         $('#stats-fit').click();
     });
+
+
+
+    /* channel management */
+    // auto set hex video id
+    const unarchived_field = $('#unarchived-field');
+    const unarchive_check =  $('#unarchived-content-check');
+    const new_video_id = $('#new-video-form input[name=new-video-id]');
+    const new_video_title = $('#new-video-title');
+    const new_video_date = $('#new-video-date');
+    const new_video_duration = $('#new-video-duration');
+    const new_video_thumb = $('#new-video-thumb');
+    unarchive_check.change(function () {
+        if ($(this).is(':checked')) {
+            $.getJSON('/api/get-new-hex-vid').done((parsed_json) => {
+                new_video_id.val(parsed_json.new_hex_vid);
+            })
+            new_video_id.prop('readonly', true);
+            unarchived_field.removeClass('d-none');
+        } else {
+            new_video_id.prop('readonly', false);
+            new_video_id.val('');
+            unarchived_field.addClass('d-none');
+        }
+    })
+    // set upload date
+    $('input[name="new-video-date-picker"]').daterangepicker({
+        singleDatePicker: true,
+        timePicker: true, 
+        locale: {
+            format: 'MMMM DD, YYYY, hh:mm A',
+        }
+    }, function (start, end, label) {
+        new_video_date.val(String(start.utc().format()));
+    });
+
+    const add_video_btn = $('#add-video-btn');
+    add_video_btn.click(() => {
+        $('#add-video-warning').empty();
+        const duration_reg = /\d{2}\:\d{2}\:\d{2}/
+        if ( (!duration_reg.test(new_video_duration.val())) && unarchive_check.is(':checked') ) {
+            const invalid_duration_warning = $(document.createElement('div'));
+            invalid_duration_warning.text('Invalid duration');
+            invalid_duration_warning.addClass('alert');
+            invalid_duration_warning.addClass('alert-warning');
+            $('#add-video-warning').append(invalid_duration_warning);
+            return false
+        }
+        const parsed_duration = moment.duration(new_video_duration.val());
+        // parse tags
+        parse_tag_list(talent_tags, $('#parsed-video-talents'));
+        parse_tag_list(stream_type_tags, $('#parsed-video-types'));
+        $.post('/api/manually-add-video', {
+            channel_id: channel_id,
+            unarchive_check: unarchive_check.is(':checked'), 
+            video_id: new_video_id.val(),
+            title: new_video_title.val(), 
+            upload_date: new_video_date.val(),
+            duration: parsed_duration.toISOString(),
+            thumb_url: new_video_thumb.val(),
+            talent_names: $('#parsed-video-talents').val(), 
+            stream_types: $('#parsed-video-types').val(), 
+        }).done((returned_data) => {
+            console.log(returned_data);
+        });
+      })
 });
