@@ -63,12 +63,19 @@
                         <div class="mt-3" style="text-align: center;">
                             <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#archived-video-modal"><i class="iconfont icon-play"></i> Play archived</button>
                         </div>
+                    {% else %}
+                        <div class="mt-3" style="text-align: center;">
+                            {% if g.user %}
+                            <button id="download-btn" type="button" class="btn btn-outline-secondary"><i class="iconfont icon-download"></i> Download</button>
+                            {% endif %}
+                        </div>
                     {% endif %}
                 </div>
             </div>
         </div>
         <div class="mt-4">
         <!-- talents display -->
+            <div id="single-video-warning"></div>
             <div class="text-secondary" style="font-size: 1.1em;">Talents: </div>
             <div class="mt-2">
                 {% for single_talent_name in participators.split(',') %}

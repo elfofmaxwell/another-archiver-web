@@ -1,9 +1,13 @@
 # -*- coding: utf-8 -*-
 
+import os
+import subprocess
+
 from flask import Blueprint, current_app, g, jsonify, request
 
 from vtbarchiver.db_functions import (ChannelStats, get_db, get_new_hex_vid,
                                       regenerate_upload_index, tag_suggestions)
+from vtbarchiver.download_functions import check_lock
 from vtbarchiver.management import login_required
 from vtbarchiver.misc_funcs import build_youtube_api, tag_title
 
@@ -182,3 +186,24 @@ def delete_video(video_id):
         return jsonify({'type': '200', 'result': 'success', 'message': '%s has been deleted'%video_id})
     finally: 
         cur.close()
+
+
+@bp.route('/downloading')
+def check_downloading(): 
+    if g.user is None: 
+        return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
+    else: 
+        if check_lock(): 
+            return jsonify({'type': '200', 'result': 'success', 'message': 'downloading'})
+        else: 
+            return jsonify({'type': '200', 'result': 'success', 'message': 'free'})
+
+
+@bp.route('<video_id>/download')
+def download_single_video(video_id):
+    if g.user is None: 
+        return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
+    else: 
+        downloader_args = ['flask', 'download-single', '--video_id', video_id]
+        subprocess.Popen(downloader_args, env=os.environ.copy())
+        return jsonify({'type': '200', 'result': 'success', 'message': 'downloading'})
