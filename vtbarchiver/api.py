@@ -3,7 +3,7 @@
 from flask import Blueprint, current_app, g, jsonify, request
 
 from vtbarchiver.db_functions import (ChannelStats, get_db, get_new_hex_vid,
-                                      tag_suggestions)
+                                      regenerate_upload_index, tag_suggestions)
 from vtbarchiver.management import login_required
 from vtbarchiver.misc_funcs import build_youtube_api, tag_title
 
@@ -69,7 +69,7 @@ def new_hex_vid():
 @bp.route('/manually-add-video', methods=("POST", 'GET'))
 def manually_add_video(): 
     if (g.user is None) or request.method == 'GET': 
-        return jsonify({'400': 'bad request'})
+        return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
     if request.method == 'POST': 
         
         db = get_db()
@@ -78,7 +78,7 @@ def manually_add_video():
             cur.execute('SELECT video_id FROM video_list WHERE video_id=?', (request.form['video_id'],))
             existed_video_list = cur.fetchall()
             if existed_video_list: 
-                return jsonify({'error': 'video existed'})
+                return jsonify({'type': '400', 'result': 'fail', 'message': 'video existed'})
             
             # get video info from youtube
             if request.form['unarchive_check'] == 'false': 
@@ -89,7 +89,7 @@ def manually_add_video():
                 )
                 video_info_response = video_info_request.excute()
                 if not video_info_response['items']: 
-                    return jsonify({'error': 'No such video ID'})
+                    return jsonify({'type': '400', 'result': 'fail', 'message': 'No such video ID'})
                 title = video_info_response['items'][0]['snippet']['title']
                 upload_date = video_info_response['items'][0]['snippet']['publishedAt']
                 duration = video_info_response['items'][0]['contentDetails']['duration']
@@ -118,12 +118,67 @@ def manually_add_video():
                 'INSERT INTO search_video (video_id, title, tagged_title, talents, stream_type) VALUES (?, ?, ?, ?, ?)', 
                 (request.form['video_id'], title, tagged_title, ';'.join(talent_names), ';'.join(stream_types))
             )
-            # regenerate upload_idx
-            cur.execute('SELECT id FROM video_list WHERE channel_id=? ORDER BY upload_date', (request.form['channel_id'], ))
-            id_by_date = cur.fetchall()
-            for upload_idx in range(len(id_by_date)): 
-                cur.execute('UPDATE video_list SET upload_idx=? WHERE id=?', (upload_idx+1, id_by_date[upload_idx][0]))
             db.commit()
-            return jsonify({'success': '%s has been added' % request.form['channel_id']})
+            # regenerate upload_idx
+            regenerate_upload_index(request.form['channel_id'])
+            return jsonify({'type': '200', 'result': 'success', 'message': '%s has been added' % request.form['channel_id']})
         finally: 
             cur.close()
+
+
+@bp.route('/<video_id>/manually-update-video', methods=("POST", 'GET'))
+def manually_update_video(video_id): 
+    if (g.user is None) or request.method == 'GET': 
+        return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
+    if request.method == 'POST': 
+
+        db = get_db()
+        cur = db.cursor()
+        try: 
+            cur.execute("SELECT title, upload_date, duration, channel_id, thumb_url FROM video_list WHERE video_id=?", (video_id, ))
+            old_video_obj = cur.fetchone()
+            new_video_info = {
+                'title': old_video_obj['title'],
+                'upload_date': old_video_obj['upload_date'], 
+                'duration': old_video_obj['duration'],
+                'channel_id': old_video_obj['channel_id'], 
+                'thumb_url': old_video_obj['thumb_url'],
+            }
+            for k, v in request.form.items(): 
+                if v: 
+                    new_video_info[k] = v
+            cur.execute(
+                'UPDATE video_list SET title=?, upload_date=?, duration=?, channel_id=?, thumb_url=? WHERE video_id=?', 
+                (new_video_info['title'], new_video_info['upload_date'], new_video_info['duration'], new_video_info['channel_id'], new_video_info['thumb_url'], video_id)
+            )
+            tagged_title = tag_title(new_video_info['title'])
+            cur.execute(
+                'UPDATE search_video SET title=?, tagged_title=? WHERE video_id=?', 
+                (new_video_info['title'], tagged_title, video_id)
+            )
+            db.commit()
+            regenerate_upload_index(new_video_info['channel_id'])
+            return jsonify({'type': '200', 'result': 'success', 'message': '%s has been updated' % video_id})
+        finally:
+            cur.close()
+        
+
+@bp.route('/<video_id>/delete-video')
+def delete_video(video_id):
+    if g.user is None: 
+        return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
+    db = get_db()
+    cur = db.cursor()
+    try: 
+        cur.execute('SELECT channel_id FROM video_list WHERE video_id=?', (video_id, ))
+        channel_id = cur.fetchone()['channel_id']
+        cur.execute('DELETE FROM video_list WHERE video_id=?', (video_id, ))
+        cur.execute('DELETE FROM talent_participation WHERE video_id=?', (video_id, ))
+        cur.execute('DELETE FROM stream_type WHERE video_id=?', (video_id, ))
+        cur.execute('DELETE FROM search_video WHERE video_id=?', (video_id, ))
+        cur.execute('DELETE FROM local_videos WHERE video_id=?', (video_id, ))
+        db.commit()
+        regenerate_upload_index(channel_id)
+        return jsonify({'type': '200', 'result': 'success', 'message': '%s has been deleted'%video_id})
+    finally: 
+        cur.close()

@@ -297,7 +297,7 @@ $(function() {
             $('#add-video-warning').append(invalid_duration_warning);
             return false
         }
-        const parsed_duration = moment.duration(new_video_duration.val());
+        let parsed_duration = moment.duration(new_video_duration.val());
         // parse tags
         parse_tag_list(talent_tags, $('#parsed-video-talents'));
         parse_tag_list(stream_type_tags, $('#parsed-video-types'));
@@ -312,7 +312,35 @@ $(function() {
             talent_names: $('#parsed-video-talents').val(), 
             stream_types: $('#parsed-video-types').val(), 
         }).done((returned_data) => {
-            console.log(returned_data);
+            if ( returned_data.result === 'success' ) {
+                const add_success_warning = $(document.createElement('div'));
+                add_success_warning.text(`${new_video_id.val()} has been added. `);
+                add_success_warning.addClass('alert');
+                add_success_warning.addClass('alert-success');
+                $('#add-video-warning').append(add_success_warning);
+                if (unarchive_check.is(':checked')){
+                    unarchive_check.click();
+                    unarchive_check.click();
+                } else {
+                    new_video_id.val('');
+                }
+                new_video_title.val('');
+                new_video_date.val('');
+                new_video_duration.val('');
+                parsed_duration='';
+                new_video_thumb.val('');
+                $('input[name="new-video-date-picker"]').val('');
+                talent_tags.removeAllTags();
+                stream_type_tags.removeAllTags();
+                $('#parsed-video-talents').val('');
+                $('#parsed-video-types').val('');
+            } else {
+                const add_server_warning = $(document.createElement('div'));
+                add_server_warning.text(returned_data.message);
+                add_server_warning.addClass('alert');
+                add_server_warning.addClass('alert-warning');
+                $('#add-video-warning').append(add_server_warning);
+            }
         });
       })
 });

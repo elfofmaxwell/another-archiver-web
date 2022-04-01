@@ -5,6 +5,9 @@
 {% block head_links %}
     <script src="https://unpkg.com/@yaireo/tagify"></script>
     <script src="https://unpkg.com/@yaireo/tagify/dist/tagify.polyfills.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css" />
 {% endblock %}
 
 {% block content %}
@@ -37,7 +40,7 @@
                                             Unarchived
                                         {% endif %}
                                     {% else %}
-                                    <a class="text-dark" href="https://www.youtube.com/watch?v={{ video_info['video_id'] }}" target="_blank">{{ video_info['video_id'] }}</a>
+                                    <a class="text-dark" href="https://www.youtube.com/watch?v={{ video_info['video_id'] }}" target="_blank" id="original-vid">{{ video_info['video_id'] }}</a>
                                     {% endif %}
                                 </div>
                             </div>
@@ -92,6 +95,57 @@
                 {% endif %}
             </div>
         </div> 
+        <!-- video settings -->
+        {% if g.user %}
+        <div class="mt-4">
+            <button type="button" class="btn btn-outline-secondary" style="width: 100%;" data-bs-toggle="collapse" data-bs-target="#video-settings">Manage video</button>
+        </div>
+        <div id="video-settings" class="collapse mt-4">
+            <div class="border rounded-2 p-3 setting-block">
+                <div class="block-border-label">
+                    Leave the field blank if you do not want to update it 
+                </div>
+                <form id="new-video-form" method="post">
+                    <div class="mb-3 mt-3">
+                        <p id="update-video-warning"></p>
+                        <div class="my-3">
+                            <label class="form-label" for="new-channel-id">Channel ID</label>
+                            <input class="form-control" type="text" name="new-channel-id" id="new-channel-id" />
+                        </div>
+                        <div id="unarchived-field">
+                            <div class="my-3">
+                                <label class="form-label" for="new-video-title">Title</label>
+                                <input class="form-control" type="text" name="new-video-title" id="new-video-title" />
+                            </div>
+                            <div class="my-3">
+                                <label class="form-label" for="new-video-date-picker">Upload time</label>
+                                <input class="form-control" type="text" name="new-video-date-picker" id="new-video-date-picker">
+                                <input type="hidden" name="new-video-date" id="new-video-date">
+                            </div>
+                            <div class="my-3">
+                                <label class="form-label" for="new-video-duration">Video duration</label>
+                                <input class="form-control" type="text" name="new-video-duration" id="new-video-duration" placeholder="hh:mm:ss">
+                            </div>
+                            <div class="my-3">
+                                <label class="form-label" for="new-video-thumb">Thumbnail url</label>
+                                <input class="form-control" type="text" name="new-video-thumb" id="new-video-thumb">
+                            </div>
+                        </div>
+                    </div>
+                    <div style="text-align: right;">
+                        <button type="button" class="btn btn-success" id="update-video-btn">Update video</button>
+                    </div>
+                </form>
+            </div>
+            <div class="my-4 text-end border rounded-2 p-3 setting-block" style="background-color: #ffcccc;">
+                <div class="block-border-label border rounded-pill">
+                    Danger zone
+                </div>
+                <button type="button" class="btn btn-danger" id="delete-video-btn">Delete Video</button>
+            </div>
+
+        </div>
+        {% endif %}
     </div>
 
 

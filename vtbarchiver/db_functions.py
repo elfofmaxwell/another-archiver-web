@@ -379,3 +379,16 @@ def get_new_hex_vid():
         return new_hex_vid
     finally: 
         cur.close()
+
+
+def regenerate_upload_index(channel_id): 
+    db = get_db()
+    cur = db.cursor()
+    try: 
+        cur.execute('SELECT id FROM video_list WHERE channel_id=? ORDER BY upload_date', (channel_id, ))
+        id_by_date = cur.fetchall()
+        for upload_idx in range(len(id_by_date)): 
+            cur.execute('UPDATE video_list SET upload_idx=? WHERE id=?', (upload_idx+1, id_by_date[upload_idx][0]))
+        db.commit()
+    finally:
+        cur.close()
