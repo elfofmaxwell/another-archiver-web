@@ -8,7 +8,7 @@ from flask import Blueprint, current_app, g, jsonify, request
 from vtbarchiver.db_functions import (ChannelStats, get_db, get_new_hex_vid,
                                       regenerate_upload_index, tag_suggestions)
 from vtbarchiver.download_functions import check_lock
-from vtbarchiver.management import login_required
+from vtbarchiver.management import api_login_required, login_required
 from vtbarchiver.misc_funcs import build_youtube_api, tag_title
 
 bp = Blueprint('api', __name__, url_prefix='/api')
@@ -71,8 +71,9 @@ def new_hex_vid():
 
 
 @bp.route('/manually-add-video', methods=("POST", 'GET'))
+@api_login_required
 def manually_add_video(): 
-    if (g.user is None) or request.method == 'GET': 
+    if request.method == 'GET': 
         return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
     if request.method == 'POST': 
         
@@ -131,8 +132,9 @@ def manually_add_video():
 
 
 @bp.route('/<video_id>/manually-update-video', methods=("POST", 'GET'))
+@api_login_required
 def manually_update_video(video_id): 
-    if (g.user is None) or request.method == 'GET': 
+    if request.method == 'GET': 
         return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
     if request.method == 'POST': 
 
@@ -168,9 +170,8 @@ def manually_update_video(video_id):
         
 
 @bp.route('/<video_id>/delete-video')
+@api_login_required
 def delete_video(video_id):
-    if g.user is None: 
-        return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
     db = get_db()
     cur = db.cursor()
     try: 
@@ -189,21 +190,17 @@ def delete_video(video_id):
 
 
 @bp.route('/downloading')
+@api_login_required
 def check_downloading(): 
-    if g.user is None: 
-        return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
+    if check_lock(): 
+        return jsonify({'type': '200', 'result': 'success', 'message': 'downloading'})
     else: 
-        if check_lock(): 
-            return jsonify({'type': '200', 'result': 'success', 'message': 'downloading'})
-        else: 
-            return jsonify({'type': '200', 'result': 'success', 'message': 'free'})
+        return jsonify({'type': '200', 'result': 'success', 'message': 'free'})
 
 
 @bp.route('<video_id>/download')
+@api_login_required
 def download_single_video(video_id):
-    if g.user is None: 
-        return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
-    else: 
-        downloader_args = ['flask', 'download-single', '--video_id', video_id]
-        subprocess.Popen(downloader_args, env=os.environ.copy())
-        return jsonify({'type': '200', 'result': 'success', 'message': 'downloading'})
+    downloader_args = ['flask', 'download-single', '--video_id', video_id]
+    subprocess.Popen(downloader_args, env=os.environ.copy())
+    return jsonify({'type': '200', 'result': 'success', 'message': 'downloading'})

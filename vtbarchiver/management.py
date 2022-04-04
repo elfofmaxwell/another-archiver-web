@@ -57,6 +57,26 @@ def login_required(view):
     return wrapped_view
 
 
+# login required wrapper for api
+def api_login_required(view): 
+    @functools.wraps(view)
+    
+    def wrapped_view(**kwargs): 
+        # if no user in current request, redirect for login
+        if g.user is None: 
+            return jsonify(
+                {
+                    'type': '400', 
+                    'result': 'fail', 
+                    'message': 'login required'
+                }
+            )
+        # else excute view
+        return view(**kwargs)
+    
+    return wrapped_view
+
+
 # login page
 @bp.route('/login', methods=('GET', 'POST'))
 def login(): 

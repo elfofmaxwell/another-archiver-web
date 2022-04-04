@@ -4,14 +4,14 @@ import datetime
 import urllib.parse
 from math import ceil
 
-from flask import (Blueprint, current_app, flash, g, redirect, render_template,
-                   request, url_for)
+from flask import (Blueprint, current_app, flash, g, jsonify, redirect,
+                   render_template, request, url_for)
 
 from vtbarchiver.db_functions import (find_common_items, find_tags,
                                       full_text_search, get_db,
                                       time_range_filter)
 from vtbarchiver.local_file_management import get_relpath_to_static
-from vtbarchiver.management import login_required
+from vtbarchiver.management import api_login_required, login_required
 from vtbarchiver.misc_funcs import Pagination, tag_title
 
 bp = Blueprint('videos', __name__, url_prefix='/videos')
@@ -85,7 +85,7 @@ def single_video(video_id):
 
 
 @bp.route('/<video_id>/add-talent', methods=('POST', 'GET'))
-@login_required
+@api_login_required
 def add_talent(video_id): 
     if request.method == 'POST': 
         
@@ -102,11 +102,21 @@ def add_talent(video_id):
         finally:
             cur.close()
         
-    return redirect(url_for('videos.single_video', video_id=video_id))
+        return jsonify({
+            'type': '200', 
+            'result': 'success', 
+            'message': 'talents has been added', 
+        })
+    else: 
+        return jsonify({
+            'type': '500', 
+            'result': 'fail', 
+            'message': 'internal error'
+        })
 
 
 @bp.route('/<video_id>/add-stream-type', methods=('POST', 'GET'))
-@login_required
+@api_login_required
 def add_stream_type(video_id): 
     if request.method == 'POST': 
         
@@ -123,7 +133,17 @@ def add_stream_type(video_id):
         finally:
             cur.close()
         
-    return redirect(url_for('videos.single_video', video_id=video_id))
+        return jsonify({
+            'type': '200', 
+            'result': 'success', 
+            'message': 'tags has been added', 
+        })
+    else: 
+        return jsonify({
+            'type': '500', 
+            'result': 'fail', 
+            'message': 'internal error'
+        })
 
 
 @bp.route('/search')

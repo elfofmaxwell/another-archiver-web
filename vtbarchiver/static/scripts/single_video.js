@@ -1,4 +1,6 @@
 'use strict';
+const video_id = location.pathname.split('/')[2];
+
 format_upload_date();
 
 const video_duration_items = $('.video-duration');
@@ -23,14 +25,54 @@ stream_type_tags.on('input', type_input_ajax);
 
 // parse tags
 const parsed_talent_form = $('#parsed-talent-form');
-parsed_talent_form.submit(function() {
+const submit_talent_btn = $('#submit-talent-btn');
+submit_talent_btn.click(function() {
+  $('add-talent-warning').empty();
   parse_tag_list(talent_tags, $('#parsed-talents'));
-});
+  $.post(
+    `/videos/${video_id}/add-talent`, 
+    {
+      talents: $('#parsed-talents').val(), 
+    }
+  ).done(function (returned_data) {
+    if (returned_data.message === "login required") {
+      location.assign("/management/login");
+    } else if (returned_data.result === "success") {
+      location.reload();
+    } else {
+      let talent_warning = $(document.createElement('div'));
+      talent_warning.text('Oops, something went wrong, please try again');
+      talent_warning.addClass('alert');
+      talent_warning.addClass('alert-warning');
+      $('add-talent-warning').append(talent_warning);
+    }
+  });
+})
 
 const parsed_stream_form = $('#parsed-stream-form');
-parsed_stream_form.submit(function() {
+const submit_type_btn = $('#submit-type-btn');
+submit_type_btn.click(function() {
+  $('add-type-warning').empty();
   parse_tag_list(stream_type_tags, $('#parsed-stream'));
-});
+  $.post(
+    `/videos/${video_id}/add-stream-type`, 
+    {
+      stream_type: $('#parsed-stream').val(), 
+    }
+  ).done(function (returned_data) {
+    if (returned_data.message === "login required") {
+      location.assign("/management/login");
+    } else if (returned_data.result === "success") {
+      location.reload();
+    } else {
+      let type_warning = $(document.createElement('div'));
+      type_warning.text('Oops, something went wrong, please try again');
+      type_warning.addClass('alert');
+      type_warning.addClass('alert-warning');
+      $('add-type-warning').append(type_warning);
+    }
+  });
+})
 
 
 // badges as href for search
@@ -48,7 +90,6 @@ $(function() {
   });
 
 
-  const video_id = location.pathname.split('/')[2];
     /* channel management */
   // auto set hex video id
   const unarchived_field = $('#unarchived-field');
@@ -104,7 +145,7 @@ $(function() {
           thumb_url: new_video_thumb.val()
       }).done((returned_data) => {
           if ( returned_data.result === 'success') {
-            location.assign(location.href);
+            location.reload();
           } else {
             const update_server_warning = $(document.createElement('div'));
             update_server_warning.text('Server says: '+returned_data.message);
