@@ -3,12 +3,13 @@
 import os
 import subprocess
 
-from flask import Blueprint, current_app, g, jsonify, request
+from flask import Blueprint, current_app, g, jsonify, request, session
 
 from vtbarchiver.db_functions import (ChannelStats, get_db, get_new_hex_vid,
                                       regenerate_upload_index, tag_suggestions)
 from vtbarchiver.download_functions import check_lock
-from vtbarchiver.management import api_login_required, login_required
+from vtbarchiver.management import (api_login_required, check_password_hash,
+                                    login_required)
 from vtbarchiver.misc_funcs import build_youtube_api, tag_title
 
 bp = Blueprint('api', __name__, url_prefix='/api')
@@ -204,3 +205,42 @@ def download_single_video(video_id):
     downloader_args = ['flask', 'download-single', '--video_id', video_id]
     subprocess.Popen(downloader_args, env=os.environ.copy())
     return jsonify({'type': '200', 'result': 'success', 'message': 'downloading'})
+
+
+@bp.route('/check-login')
+def check_login(): 
+    if g.user: 
+        return jsonify({'userId': g.user['id'], 'userName': g.user['username']})
+    else: 
+        return jsonify({'userId': -1, 'userName': ''})
+
+@bp.route('/login', methods = ('POST', ))
+def login(): 
+    if request.method == 'POST': 
+        # get form contents
+        username = request.json['userName']
+        password = request.json['password']
+        
+        # search for user in db
+        db = get_db()
+        error = None
+        cur = db.cursor()
+        try: 
+            cur.execute('SELECT * FROM admin_list WHERE username = ?', (username, ))
+            user = cur.fetchone()
+        finally: 
+            cur.close()
+        
+        # check whether password is corret
+        if (not user) or (not check_password_hash(user['passwd_hash'], password)): 
+            error = 'Invalid username or password, please try again'
+
+        
+        # if correct, renew cookie and redirect to management panel
+        if error is None: 
+            session.clear()
+            session['user_id'] = user['id']
+            session['username'] = user['username']
+            return jsonify({'userId': user['id'], 'userName': user['username']})
+            
+    return jsonify({'userId': -1, 'userName': ''})

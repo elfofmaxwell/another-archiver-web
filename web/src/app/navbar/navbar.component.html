@@ -1,0 +1,22 @@
+<nav class="navbar navbar-expand-lg navbar-light">
+  <div class="container-fluid">
+    <a class="navbar-brand" routerLink="/home">VArchiver</a>
+
+    <button class="navbar-toggler" type="button" (click)="toggle_navbar()">&#9776;</button>
+  
+
+    <div [ngbCollapse]="isMenuCollapsed" class="collapse navbar-collapse bg-light">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link" (click)="isMenuCollapsed = true">Channels</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" (click)="isMenuCollapsed = true">Videos</a>
+        </li>
+        <li *ngIf="userInfo.userName" class="nav-item">
+          <a class="nav-link" (click)="isMenuCollapsed = true">Management</a>
+        </li>
+      </ul>
+    </div>
+  </div>
+</nav>
