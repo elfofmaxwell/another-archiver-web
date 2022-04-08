@@ -26,7 +26,10 @@ def fetch_channel(channel_id):
             maxResults = 1
         )
         response = request.execute()
-        channel_info = response['items'][0]['snippet']
+        if response['pageInfo']['totalResults']: 
+            channel_info = response['items'][0]['snippet']
+        else: 
+            raise ValueError('No such channel')
 
         cur.execute('SELECT id FROM channel_list WHERE channel_id=?', (channel_id,))
         existing_id = cur.fetchall()
@@ -34,15 +37,15 @@ def fetch_channel(channel_id):
         if existing_id: 
             cur.execute('UPDATE channel_list SET channel_name=?, channel_description=?, thumb_url=? WHERE id=?', (channel_info['title'], channel_info['description'], channel_info['thumbnails']["medium"]["url"], existing_id[0][0]))
         else: 
-            #print(channel_id, channel_info['title'], channel_info['description'], channel_info['thumbnails']["medium"]["url"])
             cur.execute('INSERT INTO channel_list (channel_id, channel_name, channel_description, thumb_url) VALUES (?, ?, ?, ?)', (channel_id, channel_info['title'], channel_info['description'], channel_info['thumbnails']["medium"]["url"]))
+        db.commit()
+        return {'channelId': channel_id, 'channelName': channel_info['title'], 'thumbUrl': channel_info['thumbnails']["medium"]["url"]}
     
     except: 
-        raise
+        return {'channelId': '', 'channelName': '', 'thumbUrl': ''}
 
     finally: 
         cur.close()
-        db.commit()
 
 
 def update_checkpoint(channel_id: str, checkpoint_idx=0, video_id='', offset=0): 

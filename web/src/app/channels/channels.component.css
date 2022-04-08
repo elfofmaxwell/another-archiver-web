@@ -1,0 +1,11 @@
+.channel-entry {
+  cursor: pointer;
+}
+
+.channel-label {
+  height: 100%;
+}
+
+.channel-thumb {
+  width: 5em;
+}

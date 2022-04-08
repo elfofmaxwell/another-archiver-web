@@ -5,9 +5,10 @@ import { BrowserModule } from '@angular/platform-browser';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/login.component';
 import { NavbarComponent } from './navbar/navbar.component';
-import { HomeComponent } from './home/home.component';
+import { ChannelsComponent } from './channels/channels.component';
 
 
 @NgModule({
@@ -15,14 +16,15 @@ import { HomeComponent } from './home/home.component';
     AppComponent,
     NavbarComponent,
     LoginComponent,
-    HomeComponent
+    HomeComponent,
+    ChannelsComponent
   ],
   imports: [
     BrowserModule,
-    NgbModule,
     AppRoutingModule, 
     HttpClientModule, 
-    FormsModule
+    FormsModule, 
+    NgbModule
   ],
   providers: [],
   bootstrap: [AppComponent]

@@ -2,8 +2,8 @@
 
 from math import ceil
 
-from flask import (Blueprint, current_app, flash, g, redirect, render_template,
-                   request, url_for)
+from flask import (Blueprint, current_app, flash, g, jsonify, redirect,
+                   render_template, request, url_for)
 
 from vtbarchiver.channel_records import fetch_channel, update_checkpoint
 from vtbarchiver.db_functions import get_db
@@ -15,32 +15,22 @@ from vtbarchiver.misc_funcs import Pagination
 bp = Blueprint('channels', __name__, url_prefix='/channels')
 
 
-# channels page
-@bp.route('/')
-def channels(): 
+# get channels
+def get_channels(): 
     db = get_db()
     cur = db.cursor()
     cur.execute('SELECT channel_id, channel_name, thumb_url FROM channel_list')
     channel_list = cur.fetchall()
-    return render_template('channels/channel_list.html', channel_list=channel_list)
+    return channel_list
 
 
 # add channel
-@bp.route('/add-channel', methods=('GET', 'POST'))
-@login_required
-def add_channel(): 
-    if request.method == "POST": 
-        fetch_channel(request.form['channel_id'])
-        fetch_uploaded_list(request.form['channel_id'])
-    return redirect(url_for('channels.channels'))
+def add_channel(new_channel_id): 
+    new_channel_overview = fetch_channel(new_channel_id)
+    if new_channel_overview['channelId']: 
+        fetch_uploaded_list(new_channel_id)
+    return new_channel_overview
 
-
-# fetch_channel
-@bp.route('/fetch-channels')
-@login_required
-def fetch_channels(): 
-    fetch_all()
-    return redirect(url_for('channels.channels'))
 
 
 # single channel page

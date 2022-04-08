@@ -1,7 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, Observable, of, tap } from 'rxjs';
-import { IUser, LoginInfo, SERVERURL } from './server-settings';
+import { IUser, LoginInfo } from './server-settings';
 
 @Injectable({
   providedIn: 'root'
@@ -28,18 +28,27 @@ export class AuthService {
     if (this.user.userName) {
       return of(this.user);
     } else {
-      return this.http.get<IUser>(SERVERURL+'/api/check-login')
+      return this.http.get<IUser>('/api/check-login')
       .pipe(
-        catchError(this.handleLoginError)
+        catchError(this.handleLoginError), 
+        tap((user) => this.user = user)
       );
     }
   }
 
   logIn (loginInfo: LoginInfo): Observable<IUser> {
-    console.log(loginInfo);
-    return this.http.post<IUser>(SERVERURL+'/api/login', loginInfo)
+    return this.http.post<IUser>('/api/login', loginInfo)
     .pipe(
       catchError(this.handleLoginError), 
+      tap((user) => {
+        this.user = user;
+      })
+    );
+  }
+
+  logOut (): Observable<IUser> {
+    return this.http.get<IUser>('/api/logout')
+    .pipe(
       tap((user) => {
         this.user = user;
       })

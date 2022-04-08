@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthService } from '../auth.service';
-import { IUser } from '../server-settings';
 
 @Component({
   selector: 'app-navbar',
@@ -10,10 +9,9 @@ import { IUser } from '../server-settings';
 export class NavbarComponent implements OnInit {
 
   isMenuCollapsed: boolean = true; 
-  userInfo: IUser = {userId: -1, userName: ''}
 
   constructor(
-    private authService: AuthService
+    public authService: AuthService
   ) { }
 
   ngOnInit(): void {
@@ -25,6 +23,10 @@ export class NavbarComponent implements OnInit {
   }
 
   checkLogin (): void {
-    this.authService.checkLogin().subscribe(userInfo => this.userInfo = userInfo);
+    this.authService.checkLogin().subscribe();
+  }
+
+  logOut (): void {
+    this.authService.logOut().subscribe(); 
   }
 }

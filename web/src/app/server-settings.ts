@@ -15,3 +15,15 @@ export interface IUser {
     userId: number;
     userName: string;
 }
+
+export class ChannelOverview {
+    channelId: string; 
+    channelName: string;
+    thumbUrl: string;
+
+    constructor (channelId: string = '', channelName: string = '', thumbUrl: string = '') {
+        this.channelId = channelId; 
+        this.channelName = channelName; 
+        this.thumbUrl = thumbUrl;
+    }
+}

@@ -3,16 +3,22 @@
 import os
 import subprocess
 
-from flask import Blueprint, current_app, g, jsonify, request, session
+from flask import Blueprint, abort, current_app, g, jsonify, request, session
 
+from vtbarchiver.channels import add_channel, get_channels
 from vtbarchiver.db_functions import (ChannelStats, get_db, get_new_hex_vid,
                                       regenerate_upload_index, tag_suggestions)
 from vtbarchiver.download_functions import check_lock
+from vtbarchiver.fetch_video_list import fetch_all
 from vtbarchiver.management import (api_login_required, check_password_hash,
-                                    login_required)
+                                    login_required, try_login)
 from vtbarchiver.misc_funcs import build_youtube_api, tag_title
 
 bp = Blueprint('api', __name__, url_prefix='/api')
+
+@bp.errorhandler(400)
+def bad_request(e): 
+    return jsonify({}), 400
 
 
 @bp.route('/get-tag-suggestion')
@@ -214,33 +220,48 @@ def check_login():
     else: 
         return jsonify({'userId': -1, 'userName': ''})
 
+
 @bp.route('/login', methods = ('POST', ))
 def login(): 
     if request.method == 'POST': 
         # get form contents
         username = request.json['userName']
         password = request.json['password']
-        
-        # search for user in db
-        db = get_db()
-        error = None
-        cur = db.cursor()
-        try: 
-            cur.execute('SELECT * FROM admin_list WHERE username = ?', (username, ))
-            user = cur.fetchone()
-        finally: 
-            cur.close()
-        
-        # check whether password is corret
-        if (not user) or (not check_password_hash(user['passwd_hash'], password)): 
-            error = 'Invalid username or password, please try again'
 
-        
-        # if correct, renew cookie and redirect to management panel
-        if error is None: 
-            session.clear()
-            session['user_id'] = user['id']
-            session['username'] = user['username']
-            return jsonify({'userId': user['id'], 'userName': user['username']})
-            
+        user_info = try_login(username, password)        
+
+        return jsonify({'userId': user_info.userid, 'userName': user_info.username})
+
     return jsonify({'userId': -1, 'userName': ''})
+
+
+@bp.route('/logout')
+def logout(): 
+    session.clear()
+    return jsonify({'userId': -1, 'userName': ''})
+
+
+@bp.route('/channels')
+def channels(): 
+    channel_list = get_channels()
+    return jsonify([{
+        'channelId': i['channel_id'], 
+        'channelName': i['channel_name'], 
+        'thumbUrl': i['thumb_url']
+    } for i in channel_list])
+
+
+@bp.route('/add-channel', methods = ('POST', ))
+@api_login_required
+def add_channel_api(): 
+    new_channel_overview = {'channelId': '', 'channelName': '', 'thumbUrl': ''}
+    if request.method == 'POST': 
+        new_channel_id = request.json['channelId']
+        new_channel_overview = add_channel(new_channel_id)
+    return jsonify(new_channel_overview)
+
+@bp.route('/fetch-channels')
+@api_login_required
+def fetch_channels_api(): 
+    fetched_channel_list = fetch_all()
+    return jsonify(fetched_channel_list)

@@ -9,7 +9,7 @@ import subprocess
 import click
 import psutil
 import yaml
-from flask import (Blueprint, current_app, flash, g, jsonify, redirect,
+from flask import (Blueprint, abort, current_app, flash, g, jsonify, redirect,
                    render_template, request, session, url_for)
 from flask.cli import with_appcontext
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -64,13 +64,7 @@ def api_login_required(view):
     def wrapped_view(**kwargs): 
         # if no user in current request, redirect for login
         if g.user is None: 
-            return jsonify(
-                {
-                    'type': '400', 
-                    'result': 'fail', 
-                    'message': 'login required'
-                }
-            )
+            abort(400)
         # else excute view
         return view(**kwargs)
     
@@ -233,4 +227,39 @@ def regenerate_search_index():
         db.commit()
     finally: 
         cur.close()
+
+
+def try_login(username, password): 
+
+    class UserInfo(): 
+        def __init__(self, userid=-1, username='') -> None:
+            '''
+            userid: int, default -1
+            username: string, default ''
+            '''
+            self.userid = userid
+            self.username = username
             
+
+    db = get_db()
+    error = None
+    cur = db.cursor()
+    try: 
+        cur.execute('SELECT * FROM admin_list WHERE username = ?', (username, ))
+        user = cur.fetchone()
+    finally: 
+        cur.close()
+    
+    # check whether password is corret
+    if (not user) or (not check_password_hash(user['passwd_hash'], password)): 
+        error = 'Invalid username or password, please try again'
+
+    
+    # if correct, renew cookie and redirect to management panel
+    if error is None: 
+        session.clear()
+        session['user_id'] = user['id']
+        session['username'] = user['username']
+        return UserInfo(user['id'], user['username'])
+    
+    return UserInfo()

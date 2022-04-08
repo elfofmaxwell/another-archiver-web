@@ -132,6 +132,7 @@ def fetch_all():
     try: 
         cur = db.cursor()
 
+        fetched_channel_list = [];
         # get channel list
         cur.execute('SELECT channel_id FROM channel_list')
         searched_channel_list = cur.fetchall()
@@ -140,14 +141,14 @@ def fetch_all():
         channel_list = [i[0] for i in searched_channel_list]
 
         for channel_id in channel_list: 
-            fetch_channel(channel_id)
+            fetched_channel_list.append(fetch_channel(channel_id))
             fetch_uploaded_list(channel_id)
             add_talent_name(channel_id)
         
-        return 0
+        return list(filter(lambda channel: bool(channel['channelId']), fetched_channel_list))
 
     except: 
-        raise
+        return []
     
     finally: 
         cur.close()

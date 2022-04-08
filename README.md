@@ -4,8 +4,10 @@ Yet another web app shares some functions with another-archiver.
 
 TODO:
 
-* Support unarchive videos and videos that are not in monitoring channels.
+* Support unarchive videos and videos that are not in monitoring channels. DONE
 
 * Add breadcrumbs.
 
 * Dark mode.
+
+* rewrite frontend
