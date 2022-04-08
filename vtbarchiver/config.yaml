@@ -1,0 +1,5 @@
+cookie_path: ''
+download_path: /Users/ciel/local_documents/py/another-archiver-web/vtbarchiver/backend/static/videos
+local_videos: /Users/ciel/local_documents/py/another-archiver-web/vtbarchiver/backend/static/videos
+sleep_time: '30'
+slow_mode: 'True'

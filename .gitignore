@@ -132,9 +132,9 @@ dmypy.json
 .DS_Store
 
 # personal things
-backend/vtbarchiver/static/videos
-backend/vtbarchiver/refresh_token.json
-backend/vtbarchiver/secrets.json
+vtbarchiver/static/videos
+vtbarchiver/refresh_token.json
+vtbarchiver/secrets.json
 
 # node
 node_modules
