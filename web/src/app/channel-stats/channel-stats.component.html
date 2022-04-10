@@ -1,0 +1,74 @@
+<div class="d-flex justify-content-end">
+  <div class="btn-group btn-group" id="stats-filter">
+      <button type="button" class="btn btn-outline-secondary" [class.active]="activeFilter === 0" (click)="getChannelStats(0); activeFilter=0; advFilter=false">Fit</button>
+      <button type="button" class="btn btn-outline-secondary" [class.active]="activeFilter === 30" (click)="getChannelStats(30); activeFilter=30; advFilter=false">30 Days</button>
+      <button type="button" class="btn btn-outline-secondary" [class.active]="activeFilter === 90" (click)="getChannelStats(90); activeFilter=90; advFilter=false">90 Days</button>
+      <button type="button" class="btn btn-outline-secondary" [class.active]="activeFilter === 365" (click)="getChannelStats(365); activeFilter=365; advFilter=false">365 Days</button>
+      <div class="btn-group" ngbDropdown role="group" placement="bottom-end">
+        <button type="button" class="btn btn-outline-secondary" ngbDropdownToggle (click)="activeFilter=-1">Adv</button>
+        <div class="dropdown-menu" ngbDropdownMenu>
+          <div class="form-floating m-2">
+            <input type="date" class="form-control" id="start-date" [max]="filterEndDate || today" required [(ngModel)]="filterStartDate">
+            <label for="start-date">Start</label>
+          </div>
+          <div class="form-floating m-2">
+            <input type="date" class="form-control" id="end-date" [max]="today" [min]="filterStartDate" [(ngModel)]="filterEndDate">
+            <label for="end-date">End</label>
+          </div>
+          <div class="my-1 mx-2 text-end">
+            <button type="button" class="btn btn-outline-secondary" (click)="getChannelStats(0, _filterStartDate, _filterEndDate); advFilter=true">Show</button>
+          </div>
+        </div>
+      </div>
+  </div>
+</div>
+
+<div *ngIf="(_filterStartDate || _filterEndDate) && advFilter" class="text-end text-secondary adv-search-info">
+  Showing statistics <span *ngIf="_filterStartDate">from {{filterStartDate}}</span> <span *ngIf="_filterEndDate"> to {{filterEndDate}}</span>
+</div>
+<div class="chart-container">
+  <div class="chart-title">Collaborations</div>
+  <ul class="legend-container">
+    <li *ngFor="let talentLabelName of collaborationData.labels; index as i" class="legend-label" (click)="toggleTalentLabel(i)">
+      <span class="legend-color-box" [style.backgroundColor]="collaborationColor[i]"></span>
+      <p class="legend-text" [style.textDecoration]="collaborationLabelToggle[i] ? 'none' : 'line-through'">{{talentLabelName}}</p>
+    </li>
+  </ul>
+  <div>
+    <canvas baseChart [data]="collaborationData" [type]="'doughnut'" [options]="doughnutOptions"></canvas>
+  </div>
+</div>
+
+<div class="chart-container">
+  <div class="chart-title">Stream Type</div>
+  <ul class="legend-container">
+    <li *ngFor="let streamTypeLabelName of streamTypeData.labels; index as i" class="legend-label" (click)="toggleStreamTypeLabel(i)">
+      <span class="legend-color-box" [style.backgroundColor]="streamTypeColor[i]"></span>
+      <p class="legend-text" [style.textDecoration]="streamTypeLabelToggle[i] ? 'none' : 'line-through'">{{streamTypeLabelName}}</p>
+    </li>
+  </ul>
+  <div>
+    <canvas baseChart [data]="streamTypeData" [type]="'doughnut'" [options]="doughnutOptions"></canvas>
+  </div>
+</div>
+
+<div class="chart-container">
+  <div class="chart-title">Number of Videos Uploaded per Week</div>
+  <div>
+    <canvas baseChart [data]="numWeekData" [type]="'line'" [options]="lineOptions"></canvas>
+  </div>
+</div>
+
+<div class="chart-container">
+  <div class="chart-title">Total Length of Videos Uploaded per Week (Hours)</div>
+  <div>
+    <canvas baseChart [data]="lengthWeekData" [type]="'line'" [options]="lineOptions"></canvas>
+  </div>
+</div>
+
+<div class="chart-container">
+  <div class="chart-title">Video Lengths Distribution (Minutes)</div>
+  <div>
+    <canvas baseChart [data]="durationData" [type]="'bar'" [options]="barOptions"></canvas>
+  </div>
+</div>

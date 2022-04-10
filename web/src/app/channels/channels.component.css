@@ -9,3 +9,8 @@
 .channel-thumb {
   width: 5em;
 }
+
+.thumb-container {
+  text-align: center; 
+  margin: auto;
+}

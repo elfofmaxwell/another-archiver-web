@@ -7,7 +7,7 @@ import { AuthService } from './auth.service';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  title = 'web';
+  title = 'VArchiver';
 
   constructor (private authService: AuthService) {}
 

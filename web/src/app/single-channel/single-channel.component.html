@@ -1,0 +1,47 @@
+<div class="row">
+  <div class="col-sm-1"></div>
+  <div class="col-sm-10">
+    <!-- Channel info box -->
+    <div *ngIf="channelDetail.channelId" class="bg-light shadow mx-auto mt-4">
+      <div class="row mx-0">
+        <div class="col-sm-4 border-end my-4">
+          <div class="d-flex" style="height: 100%;">
+            <div style="text-align: center; margin: auto;" class="align-self-center">
+              <img [src]="channelDetail.thumbUrl" class="rounded-circle" style="width: 60%;" alt="Thumb" />
+            </div>
+          </div>
+        </div>
+        <div class="col-sm-8">
+          <div class="d-flex px-2" style="height: 100%;">
+            <div class="align-self-center">
+              <div class="my-2"><a [href]="'https://youtube.com/channel/'+channelDetail.channelId" target="_blank" class="text-dark" style="text-decoration: none;"><h2>{{channelDetail.channelName}}</h2></a></div>
+              <div class="my-2 text-secondary">Number of videos: {{channelDetail.videoNum}}</div>
+              <div *ngIf="authService.user.userName" class="my-2 text-secondary">Download checkpoint: {{channelDetail.checkpointIndex}}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!--tabs-->
+    <ul ngbNav #nav="ngbNav" [(activeId)]="activeTab" class="nav-tabs justify-content-center mt-3">
+      <!--videos-->
+      <li [ngbNavItem]="'videos'">
+        <a ngbNavLink>Videos</a>
+        <ng-template ngbNavContent>
+          <app-video-list></app-video-list>
+        </ng-template>
+      </li>
+      <!--stats-->
+      <li [ngbNavItem]="'stats'">
+        <a ngbNavLink>Statistics</a>
+        <ng-template ngbNavContent>
+          <div class="mb-5">
+            <app-channel-stats></app-channel-stats>
+          </div>
+        </ng-template>
+      </li>
+    </ul>
+    <div [ngbNavOutlet]="nav" class="mt-2"></div>
+  <div class="col-sm-1"></div>
+</div>

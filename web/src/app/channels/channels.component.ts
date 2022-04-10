@@ -13,7 +13,7 @@ export class ChannelsComponent implements OnInit {
 
   constructor(
     private channelsService: ChannelsService, 
-    private route: Router, 
+    private router: Router, 
     public authService: AuthService
   ) { }
 
@@ -41,7 +41,7 @@ export class ChannelsComponent implements OnInit {
   }
 
   goToChannel(channelId: string): void {
-    this.route.navigate([channelId]);
+    this.router.navigate(['/channel', channelId]);
   }
 
   toggleAddChannel(): void {

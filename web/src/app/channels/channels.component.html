@@ -12,7 +12,7 @@
         <div class="row mx-0">
           <div class="col-sm-4 border-end my-1">
             <div class="d-flex channel-label">
-              <div style="text-align: center; margin: auto;" class="align-self-center">
+              <div class="align-self-center thumb-container">
                 <img [src]="singleChannel.thumbUrl" class="rounded-circle channel-thumb" alt="Thumb" />
               </div>
             </div>
@@ -34,7 +34,7 @@
         <div class="row mx-0">
           <div class="col-sm-4 border-end my-1">
             <div class="d-flex channel-label">
-              <div style="text-align: center; margin: auto;" class="align-self-center">
+              <div class="align-self-center thumb-container">
                 <div style="height: 5em;" class="d-felex">
                   <div class="align-self-center">
                     <span style="font-size: 3em;" class="text-secondary">+</span>
@@ -45,7 +45,7 @@
           </div>
           <div class="col-sm-8">
             <div *ngIf="!addChannelField" class="d-flex px-2 channel-label">
-              <div class="align-self-center">
+              <div class="align-self-center flex-grow-1">
                 <div class="my-2 text-secondary text-center text-sm-start">Add channel</div>
               </div>
             </div>

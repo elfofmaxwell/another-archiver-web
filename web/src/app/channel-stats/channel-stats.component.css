@@ -1,0 +1,50 @@
+.chart-title {
+  color: var(--bs-secondary);
+  text-align: center;
+  margin-bottom: 0.8em;
+  margin-top: 1em;
+}
+
+.chart-container {
+  margin-bottom: 1em;
+}
+
+.legend-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin: 0;
+  padding: 0;
+}
+
+.legend-label {
+  align-items: center;
+  cursor: pointer;
+  display: flex;
+  flex-direction: row;
+  margin-left: 10px;
+}
+
+.legend-color-box {
+  display: inline-block;
+  height: 10px;
+  margin-right: 5px;
+  width: 20px;
+}
+
+.legend-text {
+  color: var(--bs-secondary);
+  font-size: 0.9em;
+  margin: 0;
+  margin-right: 1em;
+  padding: 0;
+}
+
+#stats-filter button {
+  font-size: 0.8em;
+  padding: 0.2em 0.4em;
+}
+
+.adv-search-info {
+  font-size: 0.8em;
+}

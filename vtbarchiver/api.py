@@ -5,7 +5,8 @@ import subprocess
 
 from flask import Blueprint, abort, current_app, g, jsonify, request, session
 
-from vtbarchiver.channels import add_channel, get_channels
+from vtbarchiver.channels import (add_channel, get_channels,
+                                  single_channel_detail, single_channel_videos)
 from vtbarchiver.db_functions import (ChannelStats, get_db, get_new_hex_vid,
                                       regenerate_upload_index, tag_suggestions)
 from vtbarchiver.download_functions import check_lock
@@ -32,12 +33,12 @@ def get_tag_suggestion():
 def channel_stats(): 
     channel_stat_results = {}
 
-    channel_id = request.args.get('channel-id', '')
-    stats_type = request.args.get('stats-type', '')
-    lower_date_stamp = request.args.get('lower-date-stamp', '')
-    upper_date_stamp = request.args.get('upper-date-stamp', '')
+    channel_id = request.args.get('channelId', '')
+    stats_type = request.args.get('statsType', '')
+    lower_date_stamp = request.args.get('lowerDateStamp', '')
+    upper_date_stamp = request.args.get('upperDateStamp', '')
     try: 
-        time_delta = request.args.get('time-delta', 0, type=int) 
+        time_delta = request.args.get('timeDelta', 0, type=int) 
     except: 
         return jsonify(channel_stat_results)
 
@@ -53,19 +54,19 @@ def channel_stats():
             channel_obj = ChannelStats(channel_id)
 
             if stats_type == "talents-stats" or stats_type == "all": 
-                channel_stat_results['talent_stats'] = channel_obj.talents_stats(time_delta, lower_date_stamp, upper_date_stamp)
+                channel_stat_results['talentStats'] = channel_obj.talents_stats(time_delta, lower_date_stamp, upper_date_stamp)
             
             if stats_type == "tag-stats" or stats_type == "all": 
-                channel_stat_results['tag_stats'] = channel_obj.tag_stats(time_delta, lower_date_stamp, upper_date_stamp)
+                channel_stat_results['tagStats'] = channel_obj.tag_stats(time_delta, lower_date_stamp, upper_date_stamp)
             
             if stats_type == "duration-stats" or stats_type == "all": 
-                channel_stat_results['duration_stats'] = channel_obj.duration_stats(time_delta, lower_date_stamp, upper_date_stamp)
+                channel_stat_results['durationStats'] = channel_obj.duration_stats(time_delta, lower_date_stamp, upper_date_stamp)
 
             if stats_type == "duration-distr" or stats_type == "all": 
-                channel_stat_results['duration_distr'] = channel_obj.duration_distr(time_delta, lower_date_stamp, upper_date_stamp)
+                channel_stat_results['durationDistr'] = channel_obj.duration_distr(time_delta, lower_date_stamp, upper_date_stamp)
 
             if stats_type == "video-num-stats" or stats_type == "all": 
-                channel_stat_results["video_num_stats"] = channel_obj.video_num_stats(time_delta, lower_date_stamp, upper_date_stamp)
+                channel_stat_results["videoNumStats"] = channel_obj.video_num_stats(time_delta, lower_date_stamp, upper_date_stamp)
 
         return jsonify(channel_stat_results)
     finally: 
@@ -213,6 +214,9 @@ def download_single_video(video_id):
     return jsonify({'type': '200', 'result': 'success', 'message': 'downloading'})
 
 
+########## ---------- angular api's ---------- ##########
+
+
 @bp.route('/check-login')
 def check_login(): 
     if g.user: 
@@ -251,7 +255,7 @@ def channels():
     } for i in channel_list])
 
 
-@bp.route('/add-channel', methods = ('POST', ))
+@bp.route('/add-channel', methods = ('POST', 'GET'))
 @api_login_required
 def add_channel_api(): 
     new_channel_overview = {'channelId': '', 'channelName': '', 'thumbUrl': ''}
@@ -260,8 +264,26 @@ def add_channel_api():
         new_channel_overview = add_channel(new_channel_id)
     return jsonify(new_channel_overview)
 
+
 @bp.route('/fetch-channels')
 @api_login_required
 def fetch_channels_api(): 
     fetched_channel_list = fetch_all()
     return jsonify(fetched_channel_list)
+
+
+@bp.route('/channel/<channel_id>')
+def channel_detail_api(channel_id: str): 
+    channel_detail = single_channel_detail(channel_id)
+    return jsonify(channel_detail)
+
+
+@bp.route('/channel-videos/<channel_id>')
+def channel_video_api(channel_id):
+    page = request.args.get('page', 1)
+    page_entry_num = request.args.get('pageEntryNum', 5)
+    video_num, channel_videos = single_channel_videos(channel_id, int(page), int(page_entry_num))
+    return jsonify({
+        'videoNum': video_num, 
+        'videoList': channel_videos
+    })

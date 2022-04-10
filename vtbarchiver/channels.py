@@ -32,6 +32,76 @@ def add_channel(new_channel_id):
     return new_channel_overview
 
 
+# single channel detail
+def build_channel_detail(channel_id: str = '', channel_name: str = '', thumb_url: str = '', talent_name: str = '', video_num: int = 0, checkpoint_idx: int = 0): 
+    return {
+        'channelId': channel_id,
+        'channelName': channel_name,
+        'thumbUrl': thumb_url,
+        'talentName': talent_name,
+        'videoNum': video_num,
+        'checkpointIndex': checkpoint_idx,
+    }
+
+def single_channel_detail(channel_id): 
+    channel_detail = build_channel_detail()
+    db = get_db()
+    try: 
+        cur = db.cursor()
+        cur.execute("SELECT * FROM channel_list WHERE channel_id = ?", (channel_id, ))
+        channel_info = cur.fetchone()
+        if channel_info: 
+            channel_detail['channelId'] = channel_info['channel_id']
+            channel_detail['channelName'] = channel_info['channel_name']
+            channel_detail['thumbUrl'] = channel_info['thumb_url']
+            channel_detail['talentName'] = channel_info['talent_name']
+            channel_detail['checkpointIndex'] = channel_info['checkpoint_idx']
+            cur.execute("SELECT COUNT(*) video_num FROM video_list WHERE channel_id = ?", (channel_id, ))
+            channel_detail['videoNum'] = cur.fetchone()['video_num']
+        return channel_detail
+    finally: 
+        cur.close()
+
+def build_video_overview(title: str='', uploadDate: str='', duration: str='', uploadIndex: int=0, thumbUrl: str='', archived: bool=False): 
+    return {
+        'title': title,
+        'uploadDate': uploadDate,
+        'duration': duration,
+        'uploadIndex': uploadIndex, 
+        'thumbUrl': thumbUrl,
+        'archived': archived,
+    }
+
+
+def single_channel_videos(channel_id: str, page=1, page_entry_num=5): 
+    db = get_db()
+    cur = db.cursor()
+    channel_video_list = []
+    try: 
+        cur.execute("SELECT COUNT(*) video_num FROM video_list WHERE channel_id = ?", (channel_id, ))
+        video_num = cur.fetchone()['video_num']
+        page_num = max(ceil(video_num/page_entry_num), 1)
+        cur.execute(
+            '''
+            SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.duration duration, vl.thumb_url thumb_url, vl.upload_idx upload_idx, lv.id local_id
+            FROM video_list vl
+            LEFT OUTER JOIN local_videos lv
+            ON vl.video_id = lv.video_id
+            WHERE vl.channel_id = ? 
+            ORDER BY vl.upload_idx DESC
+            LIMIT ? OFFSET ?
+            ''', 
+            (channel_id, page_entry_num, (page-1)*page_entry_num)
+        )
+        videos_on_page = cur.fetchall()
+
+        if videos_on_page: 
+            for video in videos_on_page: 
+                channel_video_list.append(build_video_overview(video['title'], video['upload_date'], video['duration'], video['upload_idx'], video['thumb_url'], bool(video['local_id'])))
+        return video_num, channel_video_list
+    finally: 
+        cur.close()
+        
 
 # single channel page
 @bp.route('/<channel_id>/', defaults={'page': 1})

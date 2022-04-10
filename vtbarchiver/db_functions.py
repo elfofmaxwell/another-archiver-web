@@ -166,12 +166,12 @@ class ChannelStats():
             , (self.channel_id, lower_date_stamp, upper_date_stamp))
             talent_count_results = cur.fetchall()
             talent_count_dict = {
-                "talent_name": [], 
+                "talentName": [], 
                 "num": [], 
             }
             for i in talent_count_results: 
                 if i['talent_name'] != channel_talent_name: 
-                    talent_count_dict['talent_name'].append(i['talent_name'])
+                    talent_count_dict['talentName'].append(i['talent_name'])
                     talent_count_dict['num'].append(i['num'])
             cur.execute(
                 '''
@@ -184,7 +184,7 @@ class ChannelStats():
                 HAVING COUNT(*)=1;
                 ''', (self.channel_id, lower_date_stamp, upper_date_stamp)
             )
-            talent_count_dict['talent_name'].append('solo')
+            talent_count_dict['talentName'].append('solo')
             talent_count_dict['num'].append(len(cur.fetchall()))
             return talent_count_dict
 
@@ -215,7 +215,7 @@ class ChannelStats():
             , (self.channel_id, lower_date_stamp, upper_date_stamp))
             type_count_results = cur.fetchall()
             type_count_dict = {
-                "stream_type": [i['stream_type'] for i in type_count_results], 
+                "streamType": [i['stream_type'] for i in type_count_results], 
                 "num": [i['num'] for i in type_count_results], 
             }
             
@@ -228,7 +228,7 @@ class ChannelStats():
                 WHERE (st.video_id IS NULL) AND vl.channel_id=? AND vl.upload_date > ? AND vl.upload_date < ?
                 ''', (self.channel_id, lower_date_stamp, upper_date_stamp)
             )
-            type_count_dict['stream_type'].append("unknown")
+            type_count_dict['streamType'].append("unknown")
             type_count_dict['num'].append(cur.fetchone()['num'])
 
             return type_count_dict
@@ -309,9 +309,8 @@ class ChannelStats():
             )
             duration_list = list(map(parse_duration, [i['duration'] for i in cur.fetchall()]))
             for i in range(6): 
-                duration_distr['duration'].append("ls"+str((i+1)*30))
                 duration_distr['num'].append(len(list(filter(duration_filter_factory(i*1800, (i+1)*1800), duration_list))))
-            duration_distr['duration'].append("gt180")
+            duration_distr['duration'] = ['<30', '30-60', '60-90', '90-120', '120-150', '150-180', '>180']
             duration_distr['num'].append(len(list(filter(duration_filter_factory(10800), duration_list))))
             return duration_distr
 

@@ -1,0 +1,22 @@
+ngb-pagination ::ng-deep a {
+  color: var(--bs-secondary);
+}
+
+ngb-pagination ::ng-deep .page-item.active .page-link {
+  background-color: var(--bs-secondary);
+  color: var(--bs-light);
+  border-color: var(--bs-secondary);
+}
+
+ngb-pagination ::ng-deep :not(.active) .page-link:hover {
+  color: var(--bs-secondary);
+}
+
+#jump-page-control button, #jump-page-control input {
+  font-size: 0.8em;
+}
+
+#jump-page-control input {
+  font-size: 0.8em;
+  width: 8em;
+}
