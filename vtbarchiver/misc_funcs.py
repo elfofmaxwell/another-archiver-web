@@ -54,10 +54,16 @@ def week_stops(start_date_str, end_date_str):
     input: ISO 8601 date, return list from date earlier than that day to today with step size of 1 week, from earlist to latest
     '''
     end_date_obj = datetime.datetime.fromisoformat(end_date_str[:-1])
+    start_date_obj = datetime.datetime.fromisoformat(start_date_str[:-1])
     week_stop_list = [end_date_obj]
     current_stop = week_stop_list[0]
-    while current_stop > datetime.datetime.fromisoformat(start_date_str[:-1]): 
-        current_stop = current_stop - datetime.timedelta(weeks=1)
+
+    if (end_date_obj - start_date_obj).days > 7: 
+        step_size = datetime.timedelta(weeks=1)
+    else: 
+        step_size = datetime.timedelta(days=1)
+    while current_stop > start_date_obj: 
+        current_stop = current_stop - step_size
         week_stop_list.append(current_stop)
     week_stop_list.reverse()
     return list(map(to_isoformat, week_stop_list))

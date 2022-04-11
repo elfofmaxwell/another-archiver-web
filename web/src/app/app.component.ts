@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { AuthService } from './auth.service';
+import { Title } from '@angular/platform-browser';
 
 @Component({
   selector: 'app-root',
@@ -9,9 +9,11 @@ import { AuthService } from './auth.service';
 export class AppComponent {
   title = 'VArchiver';
 
-  constructor (private authService: AuthService) {}
+  constructor (
+    private titleService: Title
+  ) {}
 
   ngOnInit(): void {
-    this.authService.checkLogin();
+    this.titleService.setTitle('VArchiver');
   }
 }

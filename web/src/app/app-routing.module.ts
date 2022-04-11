@@ -10,6 +10,7 @@ const routes: Routes = [
   {path: 'home', component: HomeComponent}, 
   {path: 'channels', component: ChannelsComponent},
   {path: 'channel/:channelId', component: SingleChannelComponent},
+  {path: '', redirectTo: 'home', pathMatch: 'full'}
 ];
 
 @NgModule({

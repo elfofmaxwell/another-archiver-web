@@ -53,18 +53,21 @@
 </div>
 
 <div class="chart-container">
-  <div class="chart-title">Number of Videos Uploaded per Week</div>
+  <div class="chart-title">Number of Videos Uploaded per <ng-container *ngIf="lessThanWeek; then perDay; else perWeek"></ng-container></div>
   <div>
     <canvas baseChart [data]="numWeekData" [type]="'line'" [options]="lineOptions"></canvas>
   </div>
 </div>
 
 <div class="chart-container">
-  <div class="chart-title">Total Length of Videos Uploaded per Week (Hours)</div>
+  <div class="chart-title">Total Length of Videos Uploaded per <ng-container *ngIf="lessThanWeek; then perDay; else perWeek"></ng-container> (Hours)</div>
   <div>
     <canvas baseChart [data]="lengthWeekData" [type]="'line'" [options]="lineOptions"></canvas>
   </div>
 </div>
+
+<ng-template #perDay><span>Day</span></ng-template>
+<ng-template #perWeek><span>Week</span></ng-template>
 
 <div class="chart-container">
   <div class="chart-title">Video Lengths Distribution (Minutes)</div>

@@ -161,22 +161,25 @@ export class ChannelStatsComponent implements OnInit {
   // stats filter settings
   activeFilter: 0 | 30 | 90 | 365 | -1 = 0;
   advFilter: boolean = false;
+  lessThanWeek: boolean= false;
   today: string = this.parseFuncs.getToday('YYYY-MM-DD');
   _filterStartDate: string= '';
+  _filterEndDate: string = '';
   set filterStartDate(startDate: string) {
     this._filterStartDate = this.parseFuncs.toIsoDateTimeUTC(startDate);
+    this.lessThanWeek = (this.parseFuncs.calculateDateDiff(this._filterEndDate, this._filterStartDate) <= 7);
   }
   get filterStartDate(): string {
     return this.parseFuncs.formatIsoDate(this._filterStartDate, 'YYYY-MM-DD');
   }
-  _filterEndDate: string = '';
   set filterEndDate(endDate: string) {
     this._filterEndDate = this.parseFuncs.toIsoDateTimeUTC(endDate);
+    this.lessThanWeek = (this.parseFuncs.calculateDateDiff(this._filterEndDate, this._filterStartDate) <= 7);
   }
   get filterEndDate(): string {
     return this.parseFuncs.formatIsoDate(this._filterEndDate, 'YYYY-MM-DD');
   }
-  
+
 
 
   // collaborations

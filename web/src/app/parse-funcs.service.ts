@@ -43,4 +43,14 @@ export class ParseFuncsService {
   getToday(format: string='MMM DD, YYYY'): string {
     return moment().format(format);
   }
+
+  calculateDateDiff(isoStartDateTime: string, isoEndDateTime: string): number {
+    const startDateObj = moment(isoStartDateTime); 
+    const endDateObj = moment(isoEndDateTime);
+    if (startDateObj.isValid() && endDateObj.isValid()) {
+      return endDateObj.diff(startDateObj, 'days');
+    } else {
+      return 0;
+    }
+  }
 }
