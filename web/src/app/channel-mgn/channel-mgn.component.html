@@ -1,0 +1,104 @@
+<!-- Channel management -->
+<!-- download index -->
+<div *ngIf="messageList">
+  <p *ngFor="let message of messageList; index as i">
+    <ngb-alert [type]="message.messageType" (closed)="messageList.splice(i, 1)">{{message.message}}</ngb-alert>
+  </p>
+</div>
+<div class="p-3 mt-3 border rounded-2 setting-block">
+  <div class="block-border-label">
+    Download Index
+  </div>
+  <form #newIdxForm="ngForm" (input)="updateNewIdxForValid()">
+    <div class="mb-3 mt-3">
+      <label class="form-label">New download index: </label>
+      <input class="form-control" type="number" name="checkpoint_idx" min="0" [max]="channelDetail.videoNum" [(ngModel)]="newDownloadIdx">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">New video ID: </label>
+      <input class="form-control" type="text" name="video_id" [(ngModel)]="newIdAsIdx">
+    </div>
+    <div class="mb-3">
+      <label class="form-label">Offset: </label>
+      <input class="form-control" name="offset" type="number" [(ngModel)]="offset">
+    </div>
+    <div style="text-align: right;">
+      <button type="button" class="btn btn-success" [disabled]="!newIdxFormValid" (click)="updateIdx()">Apply</button>
+    </div>
+  </form>
+</div>
+
+<!-- talent name -->
+<div class="p-3 mt-4 border rounded-2 setting-block">
+  <div class="block-border-label">
+    Talent name
+  </div>
+  <form #addChannelTalentForm="ngForm">
+    <div class="my-3">
+      <label class="form-label">New talent name: </label>
+      <input class="form-control" type="text" name="talent_name" [(ngModel)]="newChannelTalentName">
+    </div>
+    <div style="text-align: right;">
+      <button type="button" class="btn btn-success me-2" (click)="addVideoTalentName()">Auto add talent</button>
+      <button type="button" class="btn btn-success" [disabled]="!newChannelTalentName" (click)="addChannelTalentName()">Apply</button>
+    </div>
+  </form>
+</div>
+
+<!-- add video manually -->
+<div class="p-3 mt-4 border rounded-2 setting-block">
+  <div class="block-border-label">
+    Add video manually
+  </div>
+  <form #newVideoForm="ngForm">
+    <div class="mb-3 mt-3">
+      <p id="add-video-warning"></p>
+      <div class="d-flex">
+        <div>
+          <label class="form-label">Video ID: </label>
+        </div>
+        <div class="flex-grow-1 text-end">
+          <input type="checkbox" class="form-check-input" id="unarchived-content-check" (click)="toggleUnarchivedContent()">
+          <label class="form-label" for="unarchived-content-check">Unarchived content</label>
+        </div>
+      </div>
+      <input class="form-control" type="text" name="new-video-id" required [disabled]="unarchivedContent" [(ngModel)]="newVideoId">
+      <div [hidden]="!unarchivedContent" id="unarchived-field">
+        <div class="my-3">
+          <label class="form-label">Title</label>
+          <input class="form-control" type="text" name="new-video-title" [required]="unarchivedContent" [(ngModel)]="newVideoTitle">
+        </div>
+        <div class="my-3">
+          <label class="form-label">Upload time</label>
+          <input class="form-control" type="datetime-local" name="new-video-date-picker" [required]="unarchivedContent" [(ngModel)]="newVideoUploadTime">
+        </div>
+        <div class="my-3">
+          <label class="form-label">Video duration</label>
+          <input class="form-control" type="text" name="new-video-duration" [required]="unarchivedContent" placeholder="hh:mm:ss" [(ngModel)]="newVideoDuration">
+        </div>
+        <div class="my-3">
+          <label class="form-label">Thumbnail url</label>
+          <input class="form-control" type="text" name="new-video-thumb" [required]="unarchivedContent" [(ngModel)]="newVideoThumb">
+        </div>
+      </div>
+      <div class="my-3">
+        <label class="form-label">Talents</label>
+        <tagify inputClass="form-control" name="talent-tags" [(ngModel)]="talentTags" [settings]="talentTagSettings" [whitelist]="talentWhitelist$"></tagify>
+      </div>
+      <div class="my-3">
+        <label class="form-label">Tags</label>
+        <tagify inputClass="form-control" name="stream-type-tags" [(ngModel)]="streamTypeTags" [settings]="streamTypeTagSettings" [whitelist]="streamTypeWhitelist$"></tagify>
+      </div>
+    </div>
+    <div style="text-align: right;">
+      <button type="button" class="btn btn-success" [disabled]="!newVideoForm.valid" (click)="onManuallyAddVideo()">Add video</button>
+    </div>
+  </form>
+</div>
+
+<div class="my-4 text-end border rounded-2 p-3 setting-block" style="background-color: #ffcccc;">
+  <div class="block-border-label border rounded-pill">
+    Danger zone
+  </div>
+  <button type="button" class="btn btn-danger">Delete Channel</button>
+</div>

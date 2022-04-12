@@ -48,16 +48,64 @@ export class VideoOverview {
   duration: string;
   uploadIndex: number; 
   thumbUrl: string;
-  archived: boolean;
+  localPath: string;
 
-  constructor (title: string='', uploadDate: string='', duration: string='', uploadIndex: number=0, thumbUrl: string='', archived: boolean=false) {
+  constructor (title: string='', uploadDate: string='', duration: string='', uploadIndex: number=0, thumbUrl: string='', localPath: string='') {
     this.title = title;
     this.uploadDate = uploadDate;
     this.duration = duration;
     this.uploadIndex = uploadIndex; 
     this.thumbUrl = thumbUrl;
-    this.archived = archived;
+    this.localPath = localPath;
   }
+}
+
+export class VideoDetail extends VideoOverview {
+  videoId: string;
+  channelId: string;
+  channelName: string;
+  talentNames: string[];
+  streamTypes: string[];
+
+  constructor (
+    title: string='', 
+    uploadDate: string='', 
+    duration: string='', 
+    uploadIndex: number=0, 
+    thumbUrl: string='', 
+    localPath: string='', 
+    videoId: string='', 
+    channelId: string='', 
+    channelName: string='', 
+    talentNames: string[]=[], 
+    streamTypes: string[]=[]
+    ) {
+      super(title, uploadDate, duration, uploadIndex, thumbUrl, localPath);
+      this.videoId = videoId;
+      this.channelId = channelId; 
+      this.channelName = channelName;
+      this.talentNames = talentNames;
+      this.streamTypes = streamTypes;
+    }
+}
+
+export class AddedVideoDetail extends VideoDetail {
+  serverMessage?: string;
+  constructor (
+    title: string='', 
+    uploadDate: string='', 
+    duration: string='', 
+    uploadIndex: number=0, 
+    thumbUrl: string='', 
+    localPath: string='', 
+    videoId: string='', 
+    channelId: string='', 
+    channelName: string='', 
+    talentNames: string[]=[], 
+    streamTypes: string[]=[]
+    ) {
+      super(title, uploadDate, duration, uploadIndex, thumbUrl, localPath, videoId, channelId, channelName, talentNames, streamTypes);
+    }
 }
 
 export interface IVideoList {

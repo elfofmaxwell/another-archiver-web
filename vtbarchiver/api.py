@@ -5,15 +5,17 @@ import subprocess
 
 from flask import Blueprint, abort, current_app, g, jsonify, request, session
 
-from vtbarchiver.channels import (add_channel, get_channels,
-                                  single_channel_detail, single_channel_videos)
+from vtbarchiver.channels import (add_channel, edit_checkpoint, edit_talent,
+                                  get_channels, single_channel_detail,
+                                  single_channel_videos)
 from vtbarchiver.db_functions import (ChannelStats, get_db, get_new_hex_vid,
                                       regenerate_upload_index, tag_suggestions)
 from vtbarchiver.download_functions import check_lock
-from vtbarchiver.fetch_video_list import fetch_all
+from vtbarchiver.fetch_video_list import add_talent_name, fetch_all
 from vtbarchiver.management import (api_login_required, check_password_hash,
                                     login_required, try_login)
 from vtbarchiver.misc_funcs import build_youtube_api, tag_title
+from vtbarchiver.videos import build_video_detail, single_video
 
 bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -24,9 +26,9 @@ def bad_request(e):
 
 @bp.route('/get-tag-suggestion')
 def get_tag_suggestion(): 
-    tag_type = request.args.get('tag-type', '')
-    query_str = request.args.get('query-str', '')
-    return jsonify(suggestions=tag_suggestions(tag_type, query_str))
+    tag_type = request.args.get('tagType', '')
+    query_str = request.args.get('queryStr', '')
+    return jsonify(tag_suggestions(tag_type, query_str))
 
 
 @bp.route('/channel-stats')
@@ -74,69 +76,76 @@ def channel_stats():
 
 
 @bp.route('/get-new-hex-vid')
+@api_login_required
 def new_hex_vid():
-    return jsonify(new_hex_vid=get_new_hex_vid())
+    return jsonify(get_new_hex_vid())
 
 
-@bp.route('/manually-add-video', methods=("POST", 'GET'))
+@bp.route('/manually-add-video', methods=("POST",))
 @api_login_required
 def manually_add_video(): 
-    if request.method == 'GET': 
-        return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
-    if request.method == 'POST': 
+    db = get_db()
+    cur = db.cursor()
+    video_id = request.json.get('videoId', '')
+    title = request.json.get('title', '')
+    upload_date = request.json.get('uploadDate', '')
+    duration = request.json.get('duration', '')
+    thumb_url = request.json.get('thumbUrl', '')
+    channel_id = request.json.get('channelId', '')
+    talent_names = request.json.get('talentNames', [])
+    stream_types = request.json.get('streamTypes', [])
+    unarchived_content = request.json.get('unarchivedContent', False)
+    try: 
+        cur.execute('SELECT video_id FROM video_list WHERE video_id=?', (video_id,))
+        existed_video_list = cur.fetchall()
+        if existed_video_list: 
+            video_detail = single_video(video_id)
+            video_detail['serverMessage'] = 'Video existed. '
+            return jsonify(video_detail)
         
-        db = get_db()
-        cur = db.cursor()
-        try: 
-            cur.execute('SELECT video_id FROM video_list WHERE video_id=?', (request.form['video_id'],))
-            existed_video_list = cur.fetchall()
-            if existed_video_list: 
-                return jsonify({'type': '400', 'result': 'fail', 'message': 'video existed'})
-            
-            # get video info from youtube
-            if request.form['unarchive_check'] == 'false': 
-                youtube = build_youtube_api()
-                video_info_request = youtube.videos().list(
-                    part="snippet,contentDetails", 
-                    id=request.form['video_id']
-                )
-                video_info_response = video_info_request.excute()
-                if not video_info_response['items']: 
-                    return jsonify({'type': '400', 'result': 'fail', 'message': 'No such video ID'})
-                title = video_info_response['items'][0]['snippet']['title']
-                upload_date = video_info_response['items'][0]['snippet']['publishedAt']
-                duration = video_info_response['items'][0]['contentDetails']['duration']
-                thumb_url = video_info_response['items'][0]['snippet']['thumbnails']['high']['url']
-            # use video info from form 
-            else: 
-                title = request.form['title']
-                upload_date = request.form['upload_date']
-                duration = request.form['duration']
-                thumb_url = request.form['thumb_url']
-            # insert into video_list
+        # get video info from youtube
+        if (not unarchived_content) and video_id: 
+            youtube = build_youtube_api()
+            video_info_request = youtube.videos().list(
+                part="snippet,contentDetails", 
+                id=video_id
+            )
+            video_info_response = video_info_request.excute()
+            if not video_info_response['items']: 
+                video_detail = build_video_detail()
+                video_detail['serverMessage'] = 'Cannot find YouTube video with ID=%s' % video_id
+                return jsonify(video_detail)
+            title = video_info_response['items'][0]['snippet']['title']
+            upload_date = video_info_response['items'][0]['snippet']['publishedAt']
+            duration = video_info_response['items'][0]['contentDetails']['duration']
+            thumb_url = video_info_response['items'][0]['snippet']['thumbnails']['high']['url']
+        # insert into video_list
+        if (video_id and title and upload_date and duration and thumb_url and channel_id): 
             cur.execute(
                 'INSERT INTO video_list (video_id, title, upload_date, duration, channel_id, thumb_url) VALUES (?, ?, ?, ?, ?, ?)', 
-                (request.form['video_id'], title, upload_date, duration, request.form['channel_id'], thumb_url)
+                (video_id, title, upload_date, duration, channel_id, thumb_url)
             )
             # insert into talent_participation and stream_type
             tagged_title = tag_title(title)
-            talent_names = request.form['talent_names'].strip().split(',')
-            stream_types = request.form['stream_types'].strip().split(',')
             for talent_name in talent_names: 
-                cur.execute('INSERT INTO talent_participation (talent_name, video_id) VALUES (?, ?)', (talent_name.strip(), request.form['video_id']))
+                cur.execute('INSERT INTO talent_participation (talent_name, video_id) VALUES (?, ?)', (talent_name.strip(), video_id))
             for stream_type in stream_types: 
-                cur.execute('INSERT INTO stream_type (stream_type, video_id) VALUES (?, ?)', (stream_type.strip(), request.form['video_id']))
+                cur.execute('INSERT INTO stream_type (stream_type, video_id) VALUES (?, ?)', (stream_type.strip(), video_id))
             # insert into search_video
             cur.execute(
                 'INSERT INTO search_video (video_id, title, tagged_title, talents, stream_type) VALUES (?, ?, ?, ?, ?)', 
-                (request.form['video_id'], title, tagged_title, ';'.join(talent_names), ';'.join(stream_types))
+                (video_id, title, tagged_title, ';'.join(talent_names), ';'.join(stream_types))
             )
             db.commit()
             # regenerate upload_idx
-            regenerate_upload_index(request.form['channel_id'])
-            return jsonify({'type': '200', 'result': 'success', 'message': '%s has been added' % request.form['channel_id']})
-        finally: 
-            cur.close()
+            regenerate_upload_index(channel_id)
+            return jsonify(single_video(video_id))
+        else: 
+            video_detail = build_video_detail()
+            video_detail['serverMessage'] = 'Insufficient argument'
+            return jsonify(video_detail)
+    finally: 
+        cur.close()
 
 
 @bp.route('/<video_id>/manually-update-video', methods=("POST", 'GET'))
@@ -255,13 +264,12 @@ def channels():
     } for i in channel_list])
 
 
-@bp.route('/add-channel', methods = ('POST', 'GET'))
+@bp.route('/add-channel', methods = ('POST',))
 @api_login_required
 def add_channel_api(): 
     new_channel_overview = {'channelId': '', 'channelName': '', 'thumbUrl': ''}
-    if request.method == 'POST': 
-        new_channel_id = request.json['channelId']
-        new_channel_overview = add_channel(new_channel_id)
+    new_channel_id = request.json['channelId']
+    new_channel_overview = add_channel(new_channel_id)
     return jsonify(new_channel_overview)
 
 
@@ -287,3 +295,40 @@ def channel_video_api(channel_id):
         'videoNum': video_num, 
         'videoList': channel_videos
     })
+
+
+@bp.route('/update-idx/<channel_id>', methods=("POST",))
+@api_login_required
+def update_channel_idx_api(channel_id): 
+    checkpoint_idx = request.json.get('checkpointIdx', 0)
+    video_id = request.json.get('videoId', '')
+    offset = request.json.get('offset', 0)
+    update_result = edit_checkpoint(channel_id, checkpoint_idx=checkpoint_idx, video_id=video_id, offset=offset)
+    if update_result == 1: 
+        return jsonify(single_channel_detail(channel_id))
+    else: 
+        return jsonify(single_channel_detail())
+
+
+@bp.route('/update-talent-name/<channel_id>', methods=("POST",))
+@api_login_required
+def update_channel_talent_name_api(channel_id: str): 
+    new_talent_name = request.json.get('talentName', '')
+    update_result = False
+    if new_talent_name: 
+        update_result = edit_talent(channel_id, new_talent_name)
+    if not update_result: 
+        return jsonify(single_channel_detail(channel_id))
+    else: 
+        return jsonify(single_channel_detail())
+
+
+# add talent name for videos without a known talent name
+@bp.route('/add-video-talent-name/<channel_id>')
+@api_login_required
+def add_video_talent_name_api(channel_id: str): 
+    add_result = add_talent_name(channel_id)
+    if not add_result: 
+        return single_channel_detail(channel_id)
+    else: 
+        return single_channel_detail()

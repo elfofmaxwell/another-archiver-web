@@ -40,6 +40,15 @@ export class ParseFuncsService {
     }
   }
 
+  toIsoDuration(durationString: string): string {
+    const durationObj = moment.duration(durationString);
+    if (moment.isDuration(durationObj)) {
+      return durationObj.toISOString();
+    } else {
+      return '';
+    }
+  }
+
   getToday(format: string='MMM DD, YYYY'): string {
     return moment().format(format);
   }

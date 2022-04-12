@@ -50,14 +50,30 @@ def videos(page):
         cur.close()
 
 
-@bp.route('/<video_id>')
+def build_video_detail(title: str='', upload_date: str='', duration: str='', upload_index: int=0, thumb_url: str='', local_path: str='', video_id: str='', channel_id: str='', channel_name: str='', talent_names: list=[], stream_types: list=[]): 
+    return {
+        'title': title,
+        'uploadDate': upload_date,
+        'duration': duration,
+        'uploadIndex': upload_index, 
+        'thumbUrl': thumb_url,
+        'localPath': local_path,
+        'videoId': video_id,
+        'channelId': channel_id, 
+        'channelName': channel_name, 
+        'talentNames': talent_names, 
+        'streamTypes': stream_types
+    }
+
+
 def single_video(video_id): 
     db = get_db()
     cursor = db.cursor()
+    video_detail = build_video_detail()
     try: 
         cursor.execute(
             '''
-            SELECT vl.video_id video_id, vl.title title, vl.channel_id channel_id, vl.upload_date upload_date, vl.duration duration, vl.thumb_url video_thumb, ch.channel_name channel_name
+            SELECT vl.video_id video_id, vl.title title, vl.channel_id channel_id, vl.upload_date upload_date, vl.duration duration, vl.thumb_url thumb_url, ch.channel_name channel_name
             FROM video_list vl 
             JOIN channel_list ch
             ON vl.channel_id = ch.channel_id
@@ -73,15 +89,16 @@ def single_video(video_id):
             video_relpath = get_relpath_to_static(local_video_info['video_path'])
         cursor.execute('SELECT talent_name FROM talent_participation WHERE video_id = ?', (video_id, ))
         participator_list = cursor.fetchall()
-        participators = ','.join([i['talent_name'] for i in participator_list])
+        participators = [i['talent_name'] for i in participator_list]
 
         cursor.execute('SELECT stream_type FROM stream_type WHERE video_id = ?', (video_id, ))
         stream_type_list = cursor.fetchall()
-        stream_type = ','.join([i['stream_type'] for i in stream_type_list])
+        stream_types = [i['stream_type'] for i in stream_type_list]
 
-        return render_template('videos/single_video.html', video_info=video_info, video_relpath=video_relpath, participators=participators, stream_type=stream_type)
+        video_detail = build_video_detail(**video_info, local_path=video_relpath, talent_names=participators, stream_types=stream_types)
     finally: 
         cursor.close()
+        return video_detail
 
 
 @bp.route('/<video_id>/add-talent', methods=('POST', 'GET'))

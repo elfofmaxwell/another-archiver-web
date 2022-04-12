@@ -4,8 +4,10 @@ import { FormsModule } from '@angular/forms';
 import { BrowserModule, Title } from '@angular/platform-browser';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 import { NgChartsModule } from 'ng2-charts';
+import { TagifyModule } from 'ngx-tagify';
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
+import { ChannelMgnComponent } from './channel-mgn/channel-mgn.component';
 import { ChannelStatsComponent } from './channel-stats/channel-stats.component';
 import { ChannelsComponent } from './channels/channels.component';
 import { HomeComponent } from './home/home.component';
@@ -24,7 +26,8 @@ import { VideoListComponent } from './video-list/video-list.component';
     ChannelsComponent,
     SingleChannelComponent,
     VideoListComponent,
-    ChannelStatsComponent
+    ChannelStatsComponent,
+    ChannelMgnComponent
   ],
   imports: [
     BrowserModule,
@@ -32,7 +35,8 @@ import { VideoListComponent } from './video-list/video-list.component';
     HttpClientModule, 
     FormsModule, 
     NgbModule, 
-    NgChartsModule
+    NgChartsModule, 
+    TagifyModule.forRoot()
   ],
   providers: [Title],
   bootstrap: [AppComponent]

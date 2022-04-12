@@ -1,0 +1,28 @@
+.block-border-label {
+  position: absolute; 
+  left: 0; 
+  top: 0; 
+  font-size: 0.9em; 
+  color: var(--bs-secondary);
+  transform: translate(5%, -50%); 
+  background-color: var(--bs-white); 
+  padding: 0 0.5em;
+}
+
+.setting-block {
+  position: relative;
+}
+
+
+.tagify {
+  --tag-pad: 0 0.5rem;  
+  line-height: 1.5;
+}
+
+.tagify__input:empty::before {
+  line-height: inherit;
+}
+
+.tagify.form-control {
+  height: unset;
+}

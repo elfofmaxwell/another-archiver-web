@@ -23,6 +23,14 @@ export class SingleChannelComponent implements OnInit {
 
   ngOnInit(): void {
     this.authService.checkLogin().subscribe();
+    this.getChannelDetail();
+  }
+
+  onRequestReload(): void {
+    this.getChannelDetail();
+  }
+
+  getChannelDetail(): void {
     if (this.channelId) {
       this.channelsService.getChannelDetail(this.channelId).subscribe(
         (channelDetail) => {
@@ -31,5 +39,4 @@ export class SingleChannelComponent implements OnInit {
       );
     }
   }
-
 }
