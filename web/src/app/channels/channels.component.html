@@ -56,7 +56,7 @@
                 </form>
               </div>
               <div class="align-self-center" style="width: 25%;">
-                <button type="button" class="btn btn-success" style="width: 100%;" (click)="addNewChannel(newChannelId)">Add</button>
+                <button type="button" class="btn btn-success" style="width: 100%;" [disabled]="!newChannelId" (click)="addNewChannel(newChannelId)">Add</button>
               </div>
             </div>
           </div>

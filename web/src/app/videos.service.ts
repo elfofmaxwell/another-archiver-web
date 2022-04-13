@@ -3,22 +3,37 @@ import { Injectable } from '@angular/core';
 import { TagData } from 'ngx-tagify';
 import { catchError, map, Observable, of } from 'rxjs';
 import { ParseFuncsService } from './parse-funcs.service';
-import { AddedVideoDetail, IVideoList } from './server-settings';
+import { AddedVideoDetail, ErrorMessage, IVideoList, VideoDetail } from './server-settings';
 
 @Injectable({
   providedIn: 'root'
 })
 export class VideosService {
 
+  private readonly SINGLE_VIDEO_URL = '/api/video/';
   private readonly CHANNEL_API_URL = '/api/channel-videos/';
   private readonly GET_HEX_ID_URL = '/api/get-new-hex-vid';
   private readonly GET_TAG_SUGGESTION_URL = '/api/get-tag-suggestion';
-  private readonly MANNUALLY_ADD_VIDEO_URL = '/api/manually-add-video';
+  private readonly MANUALLY_ADD_VIDEO_URL = '/api/manually-add-video';
+  private readonly MANUALLY_UPDATE_VIDEO_URL = '/api/manually-update-video/';
+  private readonly ADD_SINGLE_VIDEO_TALENT_URL = '/api/add-talent/';
+  private readonly ADD_SINGLE_VIDEO_TYPE_URL = '/api/add-stream-type/';
+  private readonly DELETE_VIDEO_URL = '/api/delete-video/';
 
   constructor(
     private http: HttpClient,
     private parseFuncs: ParseFuncsService
   ) { }
+  
+  getSingleVideo(videoId: string): Observable<VideoDetail> {
+    return this.http.get<VideoDetail>(this.SINGLE_VIDEO_URL+videoId)
+    .pipe(
+      catchError(
+        ()=>of(new VideoDetail)
+      )
+    );
+  }
+  
 
   getChannelVideos(channelId: string, page: number, pageEntryNum: number=5): Observable<IVideoList> {
     const queryUrl = `${this.CHANNEL_API_URL}${channelId}?`;
@@ -72,7 +87,7 @@ export class VideosService {
   }
 
   manuallyAddVideo (videoId: string='', unarchivedContent: boolean=false, title: string='', uploadDate: string='', duration: string='', thumbUrl: string='', channelId: string='', talentNames: string[]=[], stream_types: string[]=[]): Observable<AddedVideoDetail> {
-    return this.http.post<AddedVideoDetail>(this.MANNUALLY_ADD_VIDEO_URL, {
+    return this.http.post<AddedVideoDetail>(this.MANUALLY_ADD_VIDEO_URL, {
       videoId: videoId, 
       unarchivedContent: unarchivedContent,
       title: title, 
@@ -89,6 +104,53 @@ export class VideosService {
           emptyAddedVideoDetail.serverMessage = 'Server error.';
           return of(emptyAddedVideoDetail);
         }
+      )
+    );
+  }
+
+
+  manuallyUpdateVideo (videoId: string='', title: string='', uploadDate: string='', duration: string='', channelId: string='', thumbUrl: string=''): Observable<VideoDetail|ErrorMessage> {
+    const queryUrl = this.MANUALLY_UPDATE_VIDEO_URL+videoId;
+    return this.http.post<VideoDetail>(queryUrl, {
+      title: title, 
+      uploadDate: uploadDate, 
+      duration: duration, 
+      channelId: channelId, 
+      thumbUrl: thumbUrl
+    }).pipe(
+      catchError(
+        this.parseFuncs.parseHttpError
+      )
+    )
+  }
+
+
+  addSingleVideoTalents (videoId: string, talentNames: string[]): Observable<VideoDetail|ErrorMessage> {
+    const queryUrl = this.ADD_SINGLE_VIDEO_TALENT_URL + videoId
+    return this.http.post<VideoDetail>(queryUrl, talentNames)
+    .pipe(
+      catchError(
+        this.parseFuncs.parseHttpError
+      )
+    );
+  }
+
+  addSingleVideoTypes (videoId: string, streamTypes: string[]): Observable<VideoDetail|ErrorMessage> {
+    const queryUrl = this.ADD_SINGLE_VIDEO_TYPE_URL + videoId
+    return this.http.post<VideoDetail>(queryUrl, streamTypes)
+    .pipe(
+      catchError(
+        this.parseFuncs.parseHttpError
+      )
+    );
+  }
+
+  deleteVideo (videoId: string): Observable<VideoDetail|ErrorMessage> {
+    const queryUrl = this.DELETE_VIDEO_URL + videoId;
+    return this.http.delete<VideoDetail>(queryUrl)
+    .pipe(
+      catchError(
+        this.parseFuncs.parseHttpError
       )
     );
   }

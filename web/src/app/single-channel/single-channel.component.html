@@ -42,14 +42,17 @@
         </ng-template>
       </li>
       <!--management-->
-      <li [ngbNavItem]="'management'">
-        <a ngbNavLink>Management</a>
-        <ng-template ngbNavContent>
-          <div class="mb-5">
-            <app-channel-mgn [channelDetail]="channelDetail" (requestReload)="onRequestReload()"></app-channel-mgn>
-          </div>
-        </ng-template>
-      </li>
+      <ng-container *ngIf="authService.user.userName; then managementPanel"></ng-container>
+      <ng-template #managementPanel>
+        <li [ngbNavItem]="'management'">
+          <a ngbNavLink>Management</a>
+          <ng-template ngbNavContent>
+            <div class="mb-5">
+              <app-channel-mgn [channelDetail]="channelDetail" (requestReload)="onRequestReload()"></app-channel-mgn>
+            </div>
+          </ng-template>
+        </li>
+      </ng-template>
     </ul>
     <div [ngbNavOutlet]="nav" class="mt-2"></div>
   <div class="col-sm-1"></div>

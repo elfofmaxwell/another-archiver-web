@@ -43,6 +43,7 @@ export class ChannelDetail extends ChannelOverview {
 }
 
 export class VideoOverview {
+  videoId: string;
   title: string;
   uploadDate: string; 
   duration: string;
@@ -50,7 +51,8 @@ export class VideoOverview {
   thumbUrl: string;
   localPath: string;
 
-  constructor (title: string='', uploadDate: string='', duration: string='', uploadIndex: number=0, thumbUrl: string='', localPath: string='') {
+  constructor (videoId: string='', title: string='', uploadDate: string='', duration: string='', uploadIndex: number=0, thumbUrl: string='', localPath: string='') {
+    this.videoId = videoId;
     this.title = title;
     this.uploadDate = uploadDate;
     this.duration = duration;
@@ -61,27 +63,25 @@ export class VideoOverview {
 }
 
 export class VideoDetail extends VideoOverview {
-  videoId: string;
   channelId: string;
   channelName: string;
   talentNames: string[];
   streamTypes: string[];
 
   constructor (
+    videoId: string='', 
     title: string='', 
     uploadDate: string='', 
     duration: string='', 
     uploadIndex: number=0, 
     thumbUrl: string='', 
     localPath: string='', 
-    videoId: string='', 
     channelId: string='', 
     channelName: string='', 
     talentNames: string[]=[], 
     streamTypes: string[]=[]
     ) {
-      super(title, uploadDate, duration, uploadIndex, thumbUrl, localPath);
-      this.videoId = videoId;
+      super(videoId, title, uploadDate, duration, uploadIndex, thumbUrl, localPath);
       this.channelId = channelId; 
       this.channelName = channelName;
       this.talentNames = talentNames;
@@ -104,7 +104,7 @@ export class AddedVideoDetail extends VideoDetail {
     talentNames: string[]=[], 
     streamTypes: string[]=[]
     ) {
-      super(title, uploadDate, duration, uploadIndex, thumbUrl, localPath, videoId, channelId, channelName, talentNames, streamTypes);
+      super(videoId, title, uploadDate, duration, uploadIndex, thumbUrl, localPath, channelId, channelName, talentNames, streamTypes);
     }
 }
 
@@ -154,4 +154,8 @@ export class ErrorMessage {
   status: number=418;
   statusText: string="I'm a teapot";
   message: string="I'm a teapot";
+}
+
+export interface IDownloading {
+  downloading: boolean;
 }

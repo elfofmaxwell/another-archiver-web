@@ -118,7 +118,6 @@ export class ChannelMgnComponent implements OnChanges {
   newVideoTitle: string = '';
   _newVideoUploadTime: string = '';
   set newVideoUploadTime(uploadTime: string) {
-    console.log(uploadTime);
     this._newVideoUploadTime = this.parseFuncs.toIsoDateTimeUTC(uploadTime);
   }
   get newVideoUploadTime(): string {
@@ -139,7 +138,6 @@ export class ChannelMgnComponent implements OnChanges {
   );
   inputValue: string = '';
   streamTypeTags: TagData[] = [];
-  
   streamTypeTagSettings: TagifySettings = {
     callbacks: {
      input: (e) => {this.streamTypeSuggestionTerm.next(e.detail.value);}
@@ -152,15 +150,9 @@ export class ChannelMgnComponent implements OnChanges {
     switchMap((streamTypeInputStr: string) => this.videosService.getTagSuggestion("tags", streamTypeInputStr))
   );
   onManuallyAddVideo(): void {
-    const _talentTags: string[] = [];
-    const _streamTypeTags: string[] = [];
+    const _talentTags = this.parseFuncs.tagDataListToList(this.talentTags);
+    const _streamTypeTags = this.parseFuncs.tagDataListToList(this.streamTypeTags);
     const _newVideoDuration = this.parseFuncs.toIsoDuration(this.newVideoDuration);
-    for (let talentTag of this.talentTags) {
-      _talentTags.push(talentTag.value);
-    }
-    for (let streamTypeTag of this.streamTypeTags) {
-      _streamTypeTags.push(streamTypeTag.value);
-    }
     this.videosService.manuallyAddVideo(this.newVideoId, this.unarchivedContent, this.newVideoTitle, this._newVideoUploadTime, _newVideoDuration, this.newVideoThumb, this.channelId?this.channelId:'', _talentTags, _streamTypeTags)
     .subscribe(
       (addedVideoDetail: AddedVideoDetail) => {

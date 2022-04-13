@@ -1,5 +1,9 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import * as moment from 'moment';
+import { TagData } from 'ngx-tagify';
+import { Observable, of } from 'rxjs';
+import { ErrorMessage } from './server-settings';
 
 
 @Injectable({
@@ -61,5 +65,29 @@ export class ParseFuncsService {
     } else {
       return 0;
     }
+  }
+
+  tagDataListToList(tagDataList: TagData[]): string[] {
+    const dataList: string[] = [];
+    for (let tagData of tagDataList) {
+      dataList.push(tagData.value);
+    }
+    return dataList;
+  }
+
+  listToTagDataList(dataList: string[]): TagData[] {
+    const tagDataList: TagData[] = [];
+    for (let dataString of dataList) {
+      tagDataList.push({value: dataString.trim()});
+    }
+    return tagDataList;
+  }
+
+  parseHttpError(httpError: HttpErrorResponse): Observable<ErrorMessage> {
+      const errorMessage = new ErrorMessage();
+      errorMessage.status = httpError.status;
+      errorMessage.statusText = httpError.statusText;
+      errorMessage.message = "Oops, something went wrong.";
+      return of(errorMessage);
   }
 }

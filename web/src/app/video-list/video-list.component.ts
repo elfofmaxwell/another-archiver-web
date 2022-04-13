@@ -58,4 +58,8 @@ export class VideoListComponent implements OnInit {
       this.page = jumpToPage;
     }
   }
+
+  goToVideo(videoId: string) {
+    this.router.navigate(['/video', videoId]);
+  }
 }

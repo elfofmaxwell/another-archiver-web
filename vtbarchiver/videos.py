@@ -101,66 +101,31 @@ def single_video(video_id):
         return video_detail
 
 
-@bp.route('/<video_id>/add-talent', methods=('POST', 'GET'))
-@api_login_required
-def add_talent(video_id): 
-    if request.method == 'POST': 
+def add_talent(video_id: str, talent_list: list): 
         
-        talent_list = request.form['talents'].strip().split(',')
-        
-        db = get_db()
-        cur = db.cursor()
-        try: 
-            cur.execute('DELETE FROM talent_participation WHERE video_id=?', (video_id, ))
-            for talent_name in talent_list: 
-                cur.execute('INSERT INTO talent_participation (talent_name, video_id) VALUES (?, ?)', (talent_name.strip(), video_id))
-            cur.execute('UPDATE search_video SET talents=? WHERE video_id=?', (';'.join(talent_list), video_id))
-            db.commit()
-        finally:
-            cur.close()
-        
-        return jsonify({
-            'type': '200', 
-            'result': 'success', 
-            'message': 'talents has been added', 
-        })
-    else: 
-        return jsonify({
-            'type': '500', 
-            'result': 'fail', 
-            'message': 'internal error'
-        })
+    db = get_db()
+    cur = db.cursor()
+    try: 
+        cur.execute('DELETE FROM talent_participation WHERE video_id=?', (video_id, ))
+        for talent_name in talent_list: 
+            cur.execute('INSERT INTO talent_participation (talent_name, video_id) VALUES (?, ?)', (talent_name.strip(), video_id))
+        cur.execute('UPDATE search_video SET talents=? WHERE video_id=?', (';'.join(talent_list), video_id))
+        db.commit()
+    finally:
+        cur.close()
 
 
-@bp.route('/<video_id>/add-stream-type', methods=('POST', 'GET'))
-@api_login_required
-def add_stream_type(video_id): 
-    if request.method == 'POST': 
-        
-        stream_type_list = request.form['stream_type'].strip().split(',')
-        
-        db = get_db()
-        cur = db.cursor()
-        try: 
-            cur.execute('DELETE FROM stream_type WHERE video_id=?', (video_id, ))
-            for stream_type in stream_type_list: 
-                cur.execute('INSERT INTO stream_type (stream_type, video_id) VALUES (?, ?)', (stream_type.strip(), video_id))
-            cur.execute('UPDATE search_video SET stream_type=? WHERE video_id=?', (';'.join(stream_type_list), video_id))
-            db.commit()
-        finally:
-            cur.close()
-        
-        return jsonify({
-            'type': '200', 
-            'result': 'success', 
-            'message': 'tags has been added', 
-        })
-    else: 
-        return jsonify({
-            'type': '500', 
-            'result': 'fail', 
-            'message': 'internal error'
-        })
+def add_stream_type(video_id: str, stream_type_list: list): 
+    db = get_db()
+    cur = db.cursor()
+    try: 
+        cur.execute('DELETE FROM stream_type WHERE video_id=?', (video_id, ))
+        for stream_type in stream_type_list: 
+            cur.execute('INSERT INTO stream_type (stream_type, video_id) VALUES (?, ?)', (stream_type.strip(), video_id))
+        cur.execute('UPDATE search_video SET stream_type=? WHERE video_id=?', (';'.join(stream_type_list), video_id))
+        db.commit()
+    finally:
+        cur.close()
 
 
 @bp.route('/search')

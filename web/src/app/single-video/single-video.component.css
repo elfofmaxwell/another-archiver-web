@@ -1,0 +1,63 @@
+
+.talent-badge, .type-badge {
+    padding: 0.1em 0.5em;
+    background-color: #f7f7f7;
+    border-style: solid;
+    border-radius: 0.5em;
+    border-width: 1px;
+    border-color: #4F4F48;
+    display: inline-block;
+}
+
+.talent-badge:hover, .type-badge:hover {
+    background-color: #ededed;
+    cursor: pointer;
+}
+
+.add-badge>a {
+    text-decoration: none; 
+    color: var(--bs-secondary);
+}
+
+.add-badge :hover {
+    color: #3A8FB7;
+}
+
+.duration-stamp {
+    position: absolute;
+    right: 0%;
+    bottom: 0%;
+    z-index: 99;
+    padding: 0.2em;
+    background-color: rgba(0, 0, 0, 0.3);
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 0.9em;
+}
+
+.block-border-label {
+    position: absolute; 
+    left: 0; 
+    top: 0; 
+    font-size: 0.9em; 
+    color: var(--bs-secondary);
+    transform: translate(5%, -50%); 
+    background-color: var(--bs-white); 
+    padding: 0 0.5em;
+}
+
+.setting-block {
+    position: relative;
+}
+
+.tagify {
+    --tag-pad: 0 0.5rem;  
+    line-height: 1.5;
+}
+  
+.tagify__input:empty::before {
+line-height: inherit;
+}
+
+.tagify.form-control {
+height: unset;
+}

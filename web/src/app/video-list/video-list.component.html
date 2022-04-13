@@ -14,7 +14,7 @@
       </div>
     </div>
   </div>
-  <div *ngFor="let video of channelVideos.videoList" class="bg-light shadow-sm mx-auto my-2 border rounded-2" style="cursor: pointer;">
+  <div *ngFor="let video of channelVideos.videoList" class="bg-light shadow-sm mx-auto my-2 border rounded-2" style="cursor: pointer;" (click)="goToVideo(video.videoId)">
     <div class="row mx-0">
       <div class="col-sm-3 border-end px-0">
         <div class="mx-auto d-flex" style="text-align: center; align-items: center; height: 100%;">

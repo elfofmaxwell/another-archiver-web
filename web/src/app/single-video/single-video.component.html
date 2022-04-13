@@ -1,0 +1,158 @@
+<div class="mt-4 row" *ngIf="videoDetail.videoId">
+  <div class="col-sm-6">
+    <!-- thumb nail -->
+    <div class="align-self-center me-2" style="text-align: center; position: relative;">
+      <img src="{{videoDetail.thumbUrl}}" alt="Video thumbnail" style="width: 100%;" />
+      <div class="duration-stamp video-duration">{{_videoDuration}}</div>
+    </div>
+  </div>
+  <div class="col-sm-6 d-flex justify-content-center">
+    <!-- video info -->
+    <div class="align-self-center" style="width: 100%;">
+      <div style="text-align: center;">
+        <h4>{{videoDetail.title}}</h4>
+        <a style="text-decoration: none;" class="text-secondary" [routerLink]="'/channel/'+videoDetail.channelId">{{videoDetail.channelName}}</a>
+      </div>
+      <div class="mt-3">
+        <div class="d-flex justify-content-center">
+          <div class="d-flex justify-content-center" style="width: 45%;">
+            <div class="align-self-center" style="text-align: center;">
+              <span *ngIf="unarchivedContent; else archivedVideoId">
+                <ng-container *ngIf="authService.user.userName; else unarchivedMark">{{videoDetail.videoId}}</ng-container>
+                <ng-template #unarchivedMark>Unarchived</ng-template>
+              </span>
+              <ng-template #archivedVideoId>
+                <a class="text-dark" [href]="'https://www.youtube.com/watch?v='+videoDetail.videoId" target="_blank" id="original-vid">{{videoDetail.videoId}}</a>
+              </ng-template>
+            </div>
+          </div>
+          <div class="d-flex justify-content-center" style="width: 45%;">
+            <div class="video-upload-date align-self-center" style="text-align: center;">{{_videoUploadDate}}</div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-center mt-1">
+          <div style="width: 45%;">
+            <div style="text-align: center; font-size: 0.7em;" class="text-secondary">Video ID</div>
+          </div>
+          <div style="width: 45%;">
+            <div style="text-align: center; font-size: 0.7em;" class="text-secondary">Upload date</div>
+          </div>
+        </div>
+      </div>
+      <!-- play/download -->
+      <ng-container *ngIf="videoDetail.localPath; then playBtn; else downloadBtn"></ng-container>
+      <ng-template #playBtn>
+        <div class="mt-3" style="text-align: center;">
+          <button type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#archived-video-modal"><i class="iconfont icon-play"></i> Play archived</button>
+        </div>
+      </ng-template>
+      <ng-template #downloadBtn>
+        <div *ngIf="authService.user.userName" class="mt-3" style="text-align: center;">
+          <button type="button" class="btn btn-outline-secondary" [disabled]="downloaderStatus" (click)="onDownloadVideo()"><i class="iconfont icon-download"></i> Download</button>
+        </div>
+      </ng-template>
+    </div>
+  </div>
+</div>
+<div class="mt-4">
+
+
+<!--Info region-->
+<div *ngIf="messageList">
+  <p *ngFor="let message of messageList; index as i">
+    <ngb-alert [type]="message.messageType" (closed)="messageList.splice(i, 1)">{{message.message}}</ngb-alert>
+  </p>
+</div>
+
+<!-- talents display -->
+<div class="text-secondary" style="font-size: 1.1em;">Talents: </div>
+<ng-container *ngIf="editTalentToggle; then editTalentBlock; else displayTalentBlock"></ng-container>
+<ng-template #displayTalentBlock>
+  <div class="mt-2">
+    <span *ngFor="let talentName of videoDetail.talentNames" class="talent-badge m-1">{{talentName}}</span>
+    <span *ngIf="authService.user.userName" class="add-badge"><a><i class="iconfont icon-set" style="font-size: 1.5em;" (click)="editTalentToggle=!editTalentToggle;"></i></a></span>
+  </div>
+</ng-template>
+<ng-template #editTalentBlock>
+  <div class="row">
+    <div class="col-sm-9">
+      <tagify inputClass="form-control" name="talent-tags" [(ngModel)]="talentTags" [settings]="talentTagSettings" [whitelist]="talentWhitelist$"></tagify>
+    </div>
+    <div class="col-sm-3"><button class="btn btn-outline-success" type="button" style="width: 100%;" (click)="onAddTalentTags()">Apply</button></div>
+  </div>
+</ng-template>
+</div> 
+
+<!-- type display -->
+<div class="mt-4">
+  <div class="text-secondary" style="font-size: 1.1em;">Stream Types: </div>
+  <ng-container *ngIf="editStreamTypeToggle; then editStreamTypeBlock; else displayStreamTypeBlock"></ng-container>
+  <ng-template #displayStreamTypeBlock>
+    <div class="mt-2">
+      <span *ngFor="let streamType of videoDetail.streamTypes" class="talent-badge m-1">{{streamType}}</span>
+      <span *ngIf="authService.user.userName" class="add-badge"><a><i class="iconfont icon-set" style="font-size: 1.5em;" (click)="editStreamTypeToggle=!editStreamTypeToggle"></i></a></span>
+    </div>
+  </ng-template>
+  <ng-template #editStreamTypeBlock>
+    <div class="row">
+      <div class="col-sm-9">
+        <tagify inputClass="form-control" name="stream-type-tags" [(ngModel)]="streamTypeTags" [settings]="streamTypeTagSettings" [whitelist]="streamTypeWhitelist$"></tagify>
+      </div>
+      <div class="col-sm-3"><button class="btn btn-outline-success" type="button" style="width: 100%;" (click)="onAddTypeTags()">Apply</button></div>
+    </div>
+  </ng-template>
+</div> 
+
+<!-- video settings -->
+<div *ngIf="authService.user.userName">
+  <div class="mt-4">
+    <button type="button" class="btn btn-outline-secondary" style="width: 100%;" (click)="manageVideoToggle=!manageVideoToggle">Manage video</button>
+  </div>
+
+  <div class="mt-4" [(ngbCollapse)]="!manageVideoToggle">
+    <div class="border rounded-2 p-3 setting-block">
+      <div class="block-border-label">
+        Leave the field blank if you do not want to update it 
+      </div>
+      <form #updateVideoForm="ngForm">
+        <div class="mb-3 mt-3">
+          <p id="update-video-warning"></p>
+          <div class="my-3">
+            <label class="form-label">Channel ID</label>
+            <input class="form-control" type="text" name="new-channel-id" [(ngModel)]="newChannelId">
+          </div>
+          <div id="unarchived-field">
+            <div class="my-3">
+              <label class="form-label">Title</label>
+              <input class="form-control" type="text" name="new-video-title" [(ngModel)]="newTitle">
+            </div>
+            <div class="my-3">
+              <label class="form-label">Upload time</label>
+              <input class="form-control" type="datetime-local" name="new-video-date-picker" [(ngModel)]="newUploadTime">
+            </div>
+            <div class="my-3">
+              <label class="form-label">Video duration</label>
+              <input class="form-control" type="text" name="new-video-duration" placeholder="hh:mm:ss" [(ngModel)]="newDuration">
+            </div>
+            <div class="my-3">
+              <label class="form-label">Thumbnail url</label>
+              <input class="form-control" type="text" name="new-video-thumb" [(ngModel)]="newThumbUrl">
+            </div>
+          </div>
+        </div>
+        <div style="text-align: right;">
+          <button type="button" class="btn btn-success" (click)="onUpdateVideo()">Update video</button>
+        </div>
+      </form>
+    </div>
+  
+    <div class="my-4 text-end border rounded-2 p-3 setting-block" style="background-color: #ffcccc;">
+      <div class="block-border-label border rounded-pill">
+        Danger zone
+      </div>
+      <button type="button" class="btn btn-danger" (click)="onDeleteVideo()">Delete Video</button>
+    </div>
+  
+  </div>
+</div>

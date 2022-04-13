@@ -1,10 +1,10 @@
 <!-- Channel management -->
-<!-- download index -->
 <div *ngIf="messageList">
   <p *ngFor="let message of messageList; index as i">
     <ngb-alert [type]="message.messageType" (closed)="messageList.splice(i, 1)">{{message.message}}</ngb-alert>
   </p>
 </div>
+<!-- download index -->
 <div class="p-3 mt-3 border rounded-2 setting-block">
   <div class="block-border-label">
     Download Index

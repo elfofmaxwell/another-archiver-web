@@ -64,8 +64,9 @@ def single_channel_detail(channel_id=''):
         cur.close()
 
 
-def build_video_overview(title: str='', uploadDate: str='', duration: str='', uploadIndex: int=0, thumbUrl: str='', local_path: str=''): 
+def build_video_overview(video_id: str='', title: str='', uploadDate: str='', duration: str='', uploadIndex: int=0, thumbUrl: str='', local_path: str=''): 
     return {
+        'videoId': video_id, 
         'title': title,
         'uploadDate': uploadDate,
         'duration': duration,
@@ -85,7 +86,7 @@ def single_channel_videos(channel_id: str, page=1, page_entry_num=5):
         page_num = max(ceil(video_num/page_entry_num), 1)
         cur.execute(
             '''
-            SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.duration duration, vl.thumb_url thumb_url, vl.upload_idx upload_idx, lv.id local_id
+            SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.duration duration, vl.thumb_url thumb_url, vl.upload_idx upload_idx, lv.video_path local_path
             FROM video_list vl
             LEFT OUTER JOIN local_videos lv
             ON vl.video_id = lv.video_id
@@ -99,7 +100,7 @@ def single_channel_videos(channel_id: str, page=1, page_entry_num=5):
 
         if videos_on_page: 
             for video in videos_on_page: 
-                channel_video_list.append(build_video_overview(video['title'], video['upload_date'], video['duration'], video['upload_idx'], video['thumb_url'], video['local_id']))
+                channel_video_list.append(build_video_overview(video['video_id'], video['title'], video['upload_date'], video['duration'], video['upload_idx'], video['thumb_url'], video['local_path']))
         return video_num, channel_video_list
     finally: 
         cur.close()

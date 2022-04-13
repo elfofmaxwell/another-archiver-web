@@ -15,6 +15,7 @@ import { LoginComponent } from './login/login.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { SingleChannelComponent } from './single-channel/single-channel.component';
 import { VideoListComponent } from './video-list/video-list.component';
+import { SingleVideoComponent } from './single-video/single-video.component';
 
 
 @NgModule({
@@ -27,7 +28,8 @@ import { VideoListComponent } from './video-list/video-list.component';
     SingleChannelComponent,
     VideoListComponent,
     ChannelStatsComponent,
-    ChannelMgnComponent
+    ChannelMgnComponent,
+    SingleVideoComponent
   ],
   imports: [
     BrowserModule,

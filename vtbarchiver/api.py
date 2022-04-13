@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+from time import sleep
 
 from flask import Blueprint, abort, current_app, g, jsonify, request, session
 
@@ -15,7 +16,8 @@ from vtbarchiver.fetch_video_list import add_talent_name, fetch_all
 from vtbarchiver.management import (api_login_required, check_password_hash,
                                     login_required, try_login)
 from vtbarchiver.misc_funcs import build_youtube_api, tag_title
-from vtbarchiver.videos import build_video_detail, single_video
+from vtbarchiver.videos import (add_stream_type, add_talent,
+                                build_video_detail, single_video)
 
 bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -148,45 +150,43 @@ def manually_add_video():
         cur.close()
 
 
-@bp.route('/<video_id>/manually-update-video', methods=("POST", 'GET'))
+@bp.route('/manually-update-video/<video_id>', methods=("POST", ))
 @api_login_required
 def manually_update_video(video_id): 
-    if request.method == 'GET': 
-        return jsonify({'type': '400', 'result': 'fail', 'message': 'bad request'})
-    if request.method == 'POST': 
-
-        db = get_db()
-        cur = db.cursor()
-        try: 
-            cur.execute("SELECT title, upload_date, duration, channel_id, thumb_url FROM video_list WHERE video_id=?", (video_id, ))
-            old_video_obj = cur.fetchone()
-            new_video_info = {
-                'title': old_video_obj['title'],
-                'upload_date': old_video_obj['upload_date'], 
-                'duration': old_video_obj['duration'],
-                'channel_id': old_video_obj['channel_id'], 
-                'thumb_url': old_video_obj['thumb_url'],
-            }
-            for k, v in request.form.items(): 
+    db = get_db()
+    cur = db.cursor()
+    try: 
+        cur.execute("SELECT title, upload_date, duration, channel_id, thumb_url FROM video_list WHERE video_id=?", (video_id, ))
+        old_video_obj = cur.fetchone()
+        new_video_info = {
+            'title': old_video_obj['title'],
+            'uploadDate': old_video_obj['upload_date'], 
+            'duration': old_video_obj['duration'],
+            'channelId': old_video_obj['channel_id'], 
+            'thumbUrl': old_video_obj['thumb_url'],
+        }
+        for k, v in request.json.items(): 
+            if k in new_video_info.keys():
                 if v: 
                     new_video_info[k] = v
-            cur.execute(
-                'UPDATE video_list SET title=?, upload_date=?, duration=?, channel_id=?, thumb_url=? WHERE video_id=?', 
-                (new_video_info['title'], new_video_info['upload_date'], new_video_info['duration'], new_video_info['channel_id'], new_video_info['thumb_url'], video_id)
-            )
-            tagged_title = tag_title(new_video_info['title'])
-            cur.execute(
-                'UPDATE search_video SET title=?, tagged_title=? WHERE video_id=?', 
-                (new_video_info['title'], tagged_title, video_id)
-            )
-            db.commit()
-            regenerate_upload_index(new_video_info['channel_id'])
-            return jsonify({'type': '200', 'result': 'success', 'message': '%s has been updated' % video_id})
-        finally:
-            cur.close()
+        print(new_video_info)
+        cur.execute(
+            'UPDATE video_list SET title=?, upload_date=?, duration=?, channel_id=?, thumb_url=? WHERE video_id=?', 
+            (new_video_info['title'], new_video_info['uploadDate'], new_video_info['duration'], new_video_info['channelId'], new_video_info['thumbUrl'], video_id)
+        )
+        tagged_title = tag_title(new_video_info['title'])
+        cur.execute(
+            'UPDATE search_video SET title=?, tagged_title=? WHERE video_id=?', 
+            (new_video_info['title'], tagged_title, video_id)
+        )
+        db.commit()
+        regenerate_upload_index(new_video_info['channelId'])
+        return jsonify(single_video(video_id))
+    finally:
+        cur.close()
         
 
-@bp.route('/<video_id>/delete-video')
+@bp.route('/delete-video/<video_id>', methods=("DELETE", ))
 @api_login_required
 def delete_video(video_id):
     db = get_db()
@@ -201,7 +201,7 @@ def delete_video(video_id):
         cur.execute('DELETE FROM local_videos WHERE video_id=?', (video_id, ))
         db.commit()
         regenerate_upload_index(channel_id)
-        return jsonify({'type': '200', 'result': 'success', 'message': '%s has been deleted'%video_id})
+        return jsonify(single_video(video_id))
     finally: 
         cur.close()
 
@@ -209,18 +209,16 @@ def delete_video(video_id):
 @bp.route('/downloading')
 @api_login_required
 def check_downloading(): 
-    if check_lock(): 
-        return jsonify({'type': '200', 'result': 'success', 'message': 'downloading'})
-    else: 
-        return jsonify({'type': '200', 'result': 'success', 'message': 'free'})
+    return jsonify({'downloading': check_lock()})
 
 
-@bp.route('<video_id>/download')
+@bp.route('/download/<video_id>')
 @api_login_required
 def download_single_video(video_id):
     downloader_args = ['flask', 'download-single', '--video_id', video_id]
     subprocess.Popen(downloader_args, env=os.environ.copy())
-    return jsonify({'type': '200', 'result': 'success', 'message': 'downloading'})
+    sleep(0.5)
+    return jsonify({'downloading': check_lock()})
 
 
 ########## ---------- angular api's ---------- ##########
@@ -345,3 +343,27 @@ def delete_channel_api(channel_id: str):
         'channelName': i['channel_name'], 
         'thumbUrl': i['thumb_url']
     } for i in channel_list])
+
+
+# get single video info
+@bp.route('/video/<video_id>')
+def single_video_api(video_id: str): 
+    return jsonify(single_video(video_id))
+
+
+# add talent tags for a video
+@bp.route('/add-talent/<video_id>', methods=('POST', ))
+@api_login_required
+def add_talent_single_video_api(video_id: str): 
+    talent_list = request.json
+    add_talent(video_id, talent_list)
+    return jsonify(single_video(video_id))
+
+
+# add stream type tags for a video
+@bp.route('/add-stream-type/<video_id>', methods=('POST',))
+@api_login_required
+def add_stream_type_api(video_id: str): 
+    stream_type_list = request.json
+    add_stream_type(video_id, stream_type_list)
+    return jsonify(single_video(video_id))
