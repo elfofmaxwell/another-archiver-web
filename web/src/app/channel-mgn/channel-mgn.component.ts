@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { TagData, TagifySettings } from 'ngx-tagify';
 import { Observable, Subject } from 'rxjs';
 import {
@@ -9,7 +9,7 @@ import {
 import { ChannelsService } from '../channels.service';
 import { IMessage, MessageService } from '../message.service';
 import { ParseFuncsService } from '../parse-funcs.service';
-import { AddedVideoDetail, ChannelDetail } from '../server-settings';
+import { AddedVideoDetail, ChannelDetail, ErrorMessage } from '../server-settings';
 import { VideosService } from '../videos.service';
 
 @Component({
@@ -27,13 +27,15 @@ export class ChannelMgnComponent implements OnChanges {
     private channelsService: ChannelsService, 
     public messageService: MessageService, 
     private route: ActivatedRoute, 
-    private parseFuncs: ParseFuncsService
+    private parseFuncs: ParseFuncsService, 
+    private router: Router
   ) { }
 
   channelId = this.route.snapshot.paramMap.get('channelId');
 
   // messages
   messageList: IMessage[] = [];
+
 
   // upload index
   newDownloadIdx: number | undefined = undefined;
@@ -99,6 +101,7 @@ export class ChannelMgnComponent implements OnChanges {
     }
   }
 
+
   // add video manually
   @ViewChild('newVideoForm') newVideoForm?: NgForm;
   unarchivedContent: boolean = false;
@@ -115,10 +118,11 @@ export class ChannelMgnComponent implements OnChanges {
   newVideoTitle: string = '';
   _newVideoUploadTime: string = '';
   set newVideoUploadTime(uploadTime: string) {
-    this._newVideoUploadTime = uploadTime+':00Z';
+    console.log(uploadTime);
+    this._newVideoUploadTime = this.parseFuncs.toIsoDateTimeUTC(uploadTime);
   }
   get newVideoUploadTime(): string {
-    return this._newVideoUploadTime.substring(0, this._newVideoUploadTime.length-4);
+    return this.parseFuncs.formatIsoDate(this._newVideoUploadTime, 'YYYY-MM-DDThh:mm');
   }
   newVideoDuration: string = '';
   newVideoThumb: string = '';
@@ -130,7 +134,7 @@ export class ChannelMgnComponent implements OnChanges {
   };
   talentSuggestionTerm = new Subject<string>();
   talentWhitelist$: Observable<TagData[]> = this.talentSuggestionTerm.pipe(
-    debounceTime(300), 
+    debounceTime(100), 
     switchMap((talentInputStr: string) => this.videosService.getTagSuggestion("talents", talentInputStr))
   );
   inputValue: string = '';
@@ -143,7 +147,7 @@ export class ChannelMgnComponent implements OnChanges {
   };
   streamTypeSuggestionTerm = new Subject<string>();
   streamTypeWhitelist$: Observable<TagData[]> = this.streamTypeSuggestionTerm.pipe(
-    debounceTime(300), 
+    debounceTime(100), 
     distinctUntilChanged(), 
     switchMap((streamTypeInputStr: string) => this.videosService.getTagSuggestion("tags", streamTypeInputStr))
   );
@@ -178,6 +182,32 @@ export class ChannelMgnComponent implements OnChanges {
     );
   }
 
+  // delete channel
+  onDeleteChannel(): void {
+    if (!confirm('Are you sure you want to delete this channel? The action would not influence local video files. ')) {
+      return;
+    }
+    if (this.channelId) {
+      this.channelsService.deleteChannel(this.channelId)
+      .subscribe(
+        (deleteResult) => {
+          if (deleteResult instanceof ErrorMessage) {
+            this.messageService.setSingleMessage(this.messageList, deleteResult.message!, 'danger')
+          } else {
+            const channelIdList: string[] = [];
+            for (let channelOverview of deleteResult) {
+              channelIdList.push(channelOverview.channelId);
+            } 
+            if (this.channelId && (channelIdList.indexOf(this.channelId)!==-1)) {
+              this.messageService.setSingleMessage(this.messageList, `Deleting channel ${this.channelId} failed.`, 'danger');
+            } else {
+              this.router.navigate(['/channel',]);
+            }
+          }
+        }
+      );
+    }
+  }
 
   // when channel detail changed, refresh component
   ngOnChanges(changes: SimpleChanges): void {

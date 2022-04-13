@@ -1,8 +1,8 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { catchError, map, Observable, of } from 'rxjs';
 import { ParseFuncsService } from './parse-funcs.service';
-import { ChannelDetail, ChannelOverview, ChannelStats } from './server-settings';
+import { ChannelDetail, ChannelOverview, ChannelStats, ErrorMessage } from './server-settings';
 
 
 @Injectable({
@@ -17,7 +17,8 @@ export class ChannelsService {
   private readonly GET_CHANNEL_STATS_URL = '/api/channel-stats';
   private readonly UPDATE_IDX_URL = '/api/update-idx/';
   private readonly ADD_TALENT_NAME_URL = '/api/update-talent-name/';
-  private readonly ADD_TALENT_NAME_VIDEO_URL = '/api//add-video-talent-name/';
+  private readonly ADD_TALENT_NAME_VIDEO_URL = '/api/add-video-talent-name/';
+  private readonly DELETE_CHANNEL_URL = 'api/delete-channel/';
 
   constructor(
     private http: HttpClient, 
@@ -45,6 +46,21 @@ export class ChannelsService {
         () => {
           const emptyChannel = new ChannelOverview(); 
           return of(emptyChannel);
+        }
+      )
+    );
+  }
+
+  deleteChannel(channelId: string): Observable<ChannelOverview[]|ErrorMessage> {
+    return this.http.get<ChannelOverview[]|ErrorMessage>(this.DELETE_CHANNEL_URL+channelId)
+    .pipe(
+      catchError(
+        (httpError: HttpErrorResponse)=>{
+          const errorMessage = new ErrorMessage();
+          errorMessage.status = httpError.status;
+          errorMessage.statusText = httpError.statusText;
+          errorMessage.message = "Oops, something went wrong.";
+          return of(errorMessage);
         }
       )
     );

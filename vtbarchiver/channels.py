@@ -195,8 +195,6 @@ def edit_talent(channel_id, talent_name):
 
 
 # delete channel
-@bp.route('/<channel_id>/delete-channel')
-@login_required
 def delete_channel(channel_id): 
     print('Get delete signal: %s' % channel_id)
     db = get_db()
@@ -212,6 +210,5 @@ def delete_channel(channel_id):
             cur.execute('DELETE FROM search_video WHERE video_id=?', (video_id, ))
         cur.execute('DELETE FROM channel_list WHERE channel_id=?', (channel_id, ))
         db.commit()
-        return redirect(url_for('channels.channels'))
     finally: 
         cur.close()

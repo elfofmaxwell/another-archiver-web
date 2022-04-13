@@ -71,6 +71,7 @@
         <div class="my-3">
           <label class="form-label">Upload time</label>
           <input class="form-control" type="datetime-local" name="new-video-date-picker" [required]="unarchivedContent" [(ngModel)]="newVideoUploadTime">
+          {{_newVideoUploadTime}}
         </div>
         <div class="my-3">
           <label class="form-label">Video duration</label>
@@ -100,5 +101,5 @@
   <div class="block-border-label border rounded-pill">
     Danger zone
   </div>
-  <button type="button" class="btn btn-danger">Delete Channel</button>
+  <button type="button" class="btn btn-danger" (click)="onDeleteChannel()">Delete Channel</button>
 </div>

@@ -34,7 +34,7 @@ export class ParseFuncsService {
   toIsoDateTimeUTC(dateString: string): string {
     const dateMomentObj = moment(dateString);
     if (dateMomentObj.isValid()) {
-      return dateMomentObj.utc().format();
+      return dateMomentObj.utc(false).format();
     } else {
       return '';
     }

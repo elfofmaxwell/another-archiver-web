@@ -5,9 +5,9 @@ import subprocess
 
 from flask import Blueprint, abort, current_app, g, jsonify, request, session
 
-from vtbarchiver.channels import (add_channel, edit_checkpoint, edit_talent,
-                                  get_channels, single_channel_detail,
-                                  single_channel_videos)
+from vtbarchiver.channels import (add_channel, delete_channel, edit_checkpoint,
+                                  edit_talent, get_channels,
+                                  single_channel_detail, single_channel_videos)
 from vtbarchiver.db_functions import (ChannelStats, get_db, get_new_hex_vid,
                                       regenerate_upload_index, tag_suggestions)
 from vtbarchiver.download_functions import check_lock
@@ -110,7 +110,7 @@ def manually_add_video():
                 part="snippet,contentDetails", 
                 id=video_id
             )
-            video_info_response = video_info_request.excute()
+            video_info_response = video_info_request.execute()
             if not video_info_response['items']: 
                 video_detail = build_video_detail()
                 video_detail['serverMessage'] = 'Cannot find YouTube video with ID=%s' % video_id
@@ -329,6 +329,19 @@ def update_channel_talent_name_api(channel_id: str):
 def add_video_talent_name_api(channel_id: str): 
     add_result = add_talent_name(channel_id)
     if not add_result: 
-        return single_channel_detail(channel_id)
+        return jsonify(single_channel_detail(channel_id))
     else: 
-        return single_channel_detail()
+        return jsonify(single_channel_detail())
+
+
+# delete channel
+@bp.route('/delete-channel/<channel_id>')
+@api_login_required
+def delete_channel_api(channel_id: str):
+    delete_channel(channel_id)
+    channel_list = get_channels()
+    return jsonify([{
+        'channelId': i['channel_id'], 
+        'channelName': i['channel_name'], 
+        'thumbUrl': i['thumb_url']
+    } for i in channel_list])

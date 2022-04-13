@@ -170,7 +170,6 @@ class ChannelStats():
                 "num": [], 
             }
             for i in talent_count_results: 
-                print(i['talent_name'], i['num'])
                 if i['talent_name'] != channel_talent_name: 
                     talent_count_dict['talentName'].append(i['talent_name'])
                     talent_count_dict['num'].append(i['num'])

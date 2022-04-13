@@ -149,3 +149,9 @@ export class ChannelStats {
     this.videoNumStats = {week:[], num:[]};
   }
 }
+
+export class ErrorMessage {
+  status: number=418;
+  statusText: string="I'm a teapot";
+  message: string="I'm a teapot";
+}
