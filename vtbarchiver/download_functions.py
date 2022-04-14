@@ -10,6 +10,7 @@ from flask import current_app, g
 from flask.cli import with_appcontext
 
 from vtbarchiver.db_functions import get_db
+from vtbarchiver.local_file_management import scan_local_videos
 
 
 def check_lock(): 
@@ -98,6 +99,10 @@ def download_single_video(video_id, sequenced):
         if sequenced: 
             callback_args = ['flask', 'download-channels', '--callback', single_video['channel_id']]
             subprocess.Popen(callback_args, env=os.environ.copy())
+        else: 
+            scan_path = conf['local_videos']
+            if scan_path: 
+                scan_local_videos(scan_path)
 
 
     except: 
@@ -145,6 +150,14 @@ def download_channels_cmd(callback):
         if next_video_id: 
             downloader_args = ['flask', 'download-single', '--video_id', next_video_id, '--sequenced', 'True']
             subprocess.Popen(downloader_args, env=os.environ.copy())
+        else: 
+            conf_path = current_app.config['DL_CONF_PATH']
+            with open(conf_path) as f: 
+                conf = yaml.safe_load(f)
+            scan_path = conf['local_videos']
+            if scan_path: 
+                scan_local_videos(scan_path)
+
 
     finally: 
         cur.close()

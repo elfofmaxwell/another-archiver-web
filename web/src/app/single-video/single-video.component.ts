@@ -2,6 +2,7 @@ import { Location } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TagData, TagifySettings } from 'ngx-tagify';
 import { Observable, Subject } from 'rxjs';
 import {
@@ -27,7 +28,8 @@ export class SingleVideoComponent implements OnInit {
     private parseFuncs: ParseFuncsService, 
     private messageService: MessageService, 
     private location: Location, 
-    private downloaderService: DownloaderService
+    private downloaderService: DownloaderService, 
+    private modalService: NgbModal
   ) { }
   
   videoId = this.route.snapshot.paramMap.get('videoId');
@@ -41,6 +43,21 @@ export class SingleVideoComponent implements OnInit {
   unarchivedContent: boolean = false;
   _videoUploadDate: string = '';
   _videoDuration: string = '';
+
+
+  // play video
+  get videoUrlWithTime(): string {
+    return encodeURIComponent(this.videoDetail.localPath);
+  }
+  openModal(modalContent: any) {
+    this.modalService.open(
+      modalContent, 
+      {
+        centered: true,
+        size: 'lg',
+      }
+    )
+  }
 
 
   // talent tags
@@ -174,6 +191,7 @@ export class SingleVideoComponent implements OnInit {
 
 
   ngOnInit(): void {
+    this.authService.checkLogin();
     this.getVideoDetail();
     this.checkDownloader();
     
