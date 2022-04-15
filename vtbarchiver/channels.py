@@ -2,16 +2,12 @@
 
 from math import ceil
 
-from flask import (Blueprint, current_app, flash, g, jsonify, redirect,
-                   render_template, request, url_for)
+from flask import Blueprint
 
-from vtbarchiver.channel_records import fetch_channel, update_checkpoint
+from vtbarchiver.channel_records import fetch_channel
 from vtbarchiver.db_functions import get_db
-from vtbarchiver.fetch_video_list import add_talent_name as add_name
-from vtbarchiver.fetch_video_list import fetch_all, fetch_uploaded_list
-from vtbarchiver.management import login_required
-from vtbarchiver.misc_funcs import (Pagination, build_channel_detail,
-                                    build_video_overview)
+from vtbarchiver.fetch_video_list import fetch_uploaded_list
+from vtbarchiver.misc_funcs import build_channel_detail, build_video_overview
 
 bp = Blueprint('channels', __name__, url_prefix='/channels')
 
@@ -82,40 +78,6 @@ def single_channel_videos(channel_id: str, page=1, page_entry_num=5):
             for video in videos_on_page: 
                 channel_video_list.append(build_video_overview(video['video_id'], video['title'], video['upload_date'], video['duration'], video['upload_idx'], video['thumb_url'], video['local_path']))
         return video_num, channel_video_list
-    finally: 
-        cur.close()
-        
-
-# single channel page
-@bp.route('/<channel_id>/', defaults={'page': 1})
-@bp.route('/<channel_id>/page/<int:page>')
-def single_channel(channel_id, page): 
-    db = get_db()
-    try: 
-        cur = db.cursor()
-        cur.execute("SELECT * FROM channel_list WHERE channel_id = ?", (channel_id, ))
-        channel_info = cur.fetchone()
-
-        cur.execute("SELECT COUNT(*) video_num FROM video_list WHERE channel_id = ?", (channel_id, ))
-        video_num = cur.fetchone()['video_num']
-        page_entry_num = 5
-        page_num = max(ceil(video_num/page_entry_num), 1)
-        cur.execute(
-            '''
-            SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.duration duration, vl.thumb_url thumb_url, vl.upload_idx upload_idx, lv.id local_id
-            FROM video_list vl
-            LEFT OUTER JOIN local_videos lv
-            ON vl.video_id = lv.video_id
-            WHERE vl.channel_id = ? 
-            ORDER BY vl.upload_idx DESC
-            LIMIT ? OFFSET ?
-            ''', 
-            (channel_id, page_entry_num, (page-1)*page_entry_num)
-        )
-        videos_on_page = cur.fetchall()
-        pagination = Pagination(current_page=page, page_num=page_num, pagination_length=5)
-        pagination.links = [url_for('channels.single_channel', channel_id=channel_id, page=i) for i in pagination.list]
-        return render_template('channels/single_channel.html', channel_info=channel_info, page_num=page_num, pagination = pagination, video_num=video_num, videos_on_page=videos_on_page)
     finally: 
         cur.close()
 
