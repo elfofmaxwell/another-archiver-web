@@ -2,12 +2,22 @@
 
 Yet another web app shares some functions with another-archiver.
 
-TODO:
+## V0.1.0
 
-* Support unarchive videos and videos that are not in monitoring channels. DONE
+### What's new
 
-* Add breadcrumbs.
+* Frontend is rewritten with Angular to provide better performance and more robust input check and interactions.  
 
-* Dark mode.
+* Now channel statistics could be displayed for any two given time points.  
 
-* rewrite frontend
+* Better search experience.
+
+### Problems
+
+* Now an extra space is required to trigger tag suggestion
+
+### TODO
+
+* Dark mode
+
+* Better error handling pages
