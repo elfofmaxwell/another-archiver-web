@@ -193,21 +193,26 @@ export class SingleVideoComponent implements OnInit {
   ngOnInit(): void {
     this.authService.checkLogin();
     this.getVideoDetail();
-    this.checkDownloader();
-    
+    if (this.authService.user.userName) {
+      this.checkDownloader();
+    }
   }
 
   getVideoDetail() {
     if (this.videoId) {
       this.videosService.getSingleVideo(this.videoId)
       .subscribe(
-        (videoDetail: VideoDetail)=>{
-          this.videoDetail = videoDetail;
-          this.unarchivedContent = (this.videoDetail.videoId.substring(0, 2) === '__') && (this.videoDetail.videoId.substring(this.videoDetail.videoId.length-2) === '__');
-          this._videoUploadDate = this.parseFuncs.formatIsoDate(this.videoDetail.uploadDate, 'MMM DD, YYYY HH:mm');
-          this._videoDuration = this.parseFuncs.formatIsoDuration(this.videoDetail.duration);
-          this.talentTags = this.parseFuncs.listToTagDataList(this.videoDetail.talentNames);
-          this.streamTypeTags = this.parseFuncs.listToTagDataList(this.videoDetail.streamTypes);
+        (videoDetail: VideoDetail|ErrorMessage)=>{
+          if (videoDetail instanceof ErrorMessage) {
+            this.messageService.setSingleMessage(this.messageList, videoDetail.message, 'danger')
+          } else {
+            this.videoDetail = videoDetail;
+            this.unarchivedContent = (this.videoDetail.videoId.substring(0, 2) === '__') && (this.videoDetail.videoId.substring(this.videoDetail.videoId.length-2) === '__');
+            this._videoUploadDate = this.parseFuncs.formatIsoDate(this.videoDetail.uploadDate, 'MMM DD, YYYY HH:mm');
+            this._videoDuration = this.parseFuncs.formatIsoDuration(this.videoDetail.duration);
+            this.talentTags = this.parseFuncs.listToTagDataList(this.videoDetail.talentNames);
+            this.streamTypeTags = this.parseFuncs.listToTagDataList(this.videoDetail.streamTypes);
+          }
         }
       );
     }

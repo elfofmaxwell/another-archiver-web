@@ -1,0 +1,8 @@
+<div class="row">
+  <div class="col-sm-1"></div>
+  <div class="col-sm-10">
+    <app-search-video (requestReload)="onReloadVideos()"></app-search-video>
+    <app-video-list [queryType]="queryType" [pageSize]="10" [reloadTrigger]="reloadToggle"></app-video-list>
+  </div>
+  <div class="col-sm-1"></div>
+</div>

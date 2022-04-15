@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+from crypt import methods
 from time import sleep
 
 from flask import Blueprint, abort, current_app, g, jsonify, request, session
@@ -17,7 +18,8 @@ from vtbarchiver.management import (api_login_required, check_password_hash,
                                     login_required, try_login)
 from vtbarchiver.misc_funcs import build_youtube_api, tag_title
 from vtbarchiver.videos import (add_stream_type, add_talent,
-                                build_video_detail, single_video)
+                                build_video_detail, search_video, single_video,
+                                videos)
 
 bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -346,9 +348,13 @@ def delete_channel_api(channel_id: str):
 
 
 # get single video info
-@bp.route('/video/<video_id>')
+@bp.route('/video/<video_id>', methods=("GET",))
 def single_video_api(video_id: str): 
-    return jsonify(single_video(video_id))
+    video_detail = single_video(video_id)
+    if video_detail['videoId']: 
+        return video_detail
+    else:
+        abort(404)
 
 
 # add talent tags for a video
@@ -367,3 +373,17 @@ def add_stream_type_api(video_id: str):
     stream_type_list = request.json
     add_stream_type(video_id, stream_type_list)
     return jsonify(single_video(video_id))
+
+
+# get video list
+@bp.route('/videos', methods=("GET", ))
+def videos_api(): 
+    page = request.args.get('page', 1)
+    page_entry_num = request.args.get('pageEntryNum', 5)
+    video_num, all_videos = videos(int(page), int(page_entry_num))
+    return jsonify({'videoNum': video_num, 'videoList': all_videos})
+
+@bp.route('/search', methods=('GET', ))
+def search_video_api(): 
+    video_num, all_videos = search_video()
+    return jsonify({'videoNum': video_num, 'videoList': all_videos})

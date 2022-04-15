@@ -1,6 +1,9 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { IVideoList } from '../server-settings';
+import { IMessage, MessageService } from '../message.service';
+import { ParseFuncsService } from '../parse-funcs.service';
+import { SearchService } from '../search.service';
+import { ErrorMessage, IQueryObj, IVideoList } from '../server-settings';
 import { VideosService } from '../videos.service';
 
 @Component({
@@ -8,16 +11,22 @@ import { VideosService } from '../videos.service';
   templateUrl: './video-list.component.html',
   styleUrls: ['./video-list.component.css']
 })
-export class VideoListComponent implements OnInit {
+export class VideoListComponent implements OnChanges {
 
   constructor(
     private route: ActivatedRoute, 
     private videosService: VideosService, 
-    private router: Router
+    private router: Router, 
+    private parseFuncs: ParseFuncsService, 
+    private messageService: MessageService, 
+    private searchService: SearchService
   ) { }
   
+  @Input() queryType: "videos" | "search" | "channel" = 'videos';
   @Input() pageSize: number = 5;
-  channelVideos: IVideoList = {videoNum: 0, videoList: []};
+  messageList: IMessage[] = [];
+
+  videosOnPage: IVideoList = {videoNum: 0, videoList: []};
   pageNum: number = 0;
   private _page: number = 1;
   jumpToPage: number = 1;
@@ -30,21 +39,45 @@ export class VideoListComponent implements OnInit {
     this.getVideos(value, this.pageSize);
   }
 
-  ngOnInit(): void {
+  @Input() reloadTrigger: boolean = false;
+  ngOnChanges(changes: SimpleChanges): void {
     this.getVideos(this.page, this.pageSize);
   }
 
+  processVideoList: (videoList: IVideoList|ErrorMessage)=>void = (videoList) => {
+    if (videoList instanceof ErrorMessage) {
+      this.messageService.setSingleMessage(this.messageList, videoList.message, 'danger');
+    } else {
+      this.messageService.clearMessage(this.messageList);
+      this.videosOnPage = videoList;
+      for (let videoOverview of this.videosOnPage.videoList) {
+        videoOverview.uploadDate = this.parseFuncs.formatIsoDate(videoOverview.uploadDate); 
+        videoOverview.duration = this.parseFuncs.formatIsoDuration(videoOverview.duration);
+      }
+      this.pageNum = Math.ceil(videoList.videoNum/this.pageSize);
+    }
+  }
+
   getVideos(page: number, pageEntryNum: number): void {
-    if (this.router.url.split('/')[1] === 'channel') {
+    if (this.queryType === "channel") {
       const channelId = this.route.snapshot.paramMap.get('channelId'); 
       if (channelId) {
         this.videosService.getChannelVideos(channelId, page, pageEntryNum).subscribe(
-          (videoList) => {
-            this.channelVideos = videoList;
-            this.pageNum = Math.ceil(videoList.videoNum/this.pageSize);
-          }
+          this.processVideoList
         );
       }
+    } else if (this.queryType === 'videos') {
+      this.videosService.getAllVideos(page, pageEntryNum).subscribe(
+        this.processVideoList
+      );
+    } else {
+      const urlParams = this.route.snapshot.queryParamMap; 
+      const queryObj: IQueryObj = this.searchService.urlToQueryObj(urlParams);
+      queryObj['page'] = page;
+      const queryStr = this.searchService.objToBackendQueryString(queryObj);
+      this.videosService.getSearchedVideos(queryStr).subscribe(
+        this.processVideoList
+      );
     }
   }
 

@@ -1,0 +1,39 @@
+<div class="d-flex">
+  <div class="align-self-center">
+    <h2 class="mb-3">Videos</h2>
+  </div>
+  <div class="align-self-center flex-grow-1" style="text-align: right;">
+    <a class="text-secondary" style="text-decoration: none; cursor: pointer;" (click)="searchAreaToggle = !searchAreaToggle"><i class="iconfont icon-search"></i>Search</a>
+  </div>
+</div>
+<!-- Searching -->
+<div id="search-area" class="p-2 rounded-bottom" style="background-color: #ebebeb;" [ngbCollapse]="!searchAreaToggle">
+  <form>
+    <div class="row">
+      <div class="col-sm-6 d-flex pe-sm-0">
+        <div class="align-self-center">From&nbsp;</div>
+        <input name="startDate" type="date" class="form-control" [(ngModel)]="startDate">
+      </div>
+      <div class="col-sm-6 d-flex ps-sm-0">
+        <div class="align-self-center">&nbsp;To&nbsp;</div>
+        <input name="endDate" type="date" class="form-control" [(ngModel)]="endDate">
+      </div>
+    </div>
+    <tagify inputClass="form-control mt-2" name="talent-tags" [(ngModel)]="talentTags" [settings]="talentTagSettings" [whitelist]="talentWhitelist$"></tagify>
+    <tagify inputClass="form-control mt-2" name="stream-type-tags" [(ngModel)]="streamTypeTags" [settings]="streamTypeTagSettings" [whitelist]="streamTypeWhitelist$"></tagify>
+    <input id="search-keys" name="search-keys" placeholder="Search titles" class="form-control mt-2"[(ngModel)]="searchKeys">
+  </form>
+  <div class="text-end mt-2">
+    <button class="btn btn-primary" (click)="onSearch()">Search</button>
+  </div>
+</div>
+<div *ngIf="searchPage" class="row py-2">
+  <div class="col-sm-9 col-lg-10 text-secondary" style="font-size: 0.8em;">{{searchSum}}</div>
+  <div class="col-sm-3 col-lg-2 text-center text-sm-end">
+    <a class="text-secondary" style="text-decoration: none; font-size: 0.8em; cursor: pointer;" (click)="timeDescending=!timeDescending; onSearch(timeDescending)">
+      <ng-container *ngIf="timeDescending; then descendingTemp; else defaultTemp"></ng-container>
+      <ng-template #descendingTemp><i class="iconfont icon-wind-descending"></i> Newest</ng-template>
+      <ng-template #defaultTemp><i class="iconfont icon-rank"></i> Default</ng-template>
+    </a>
+  </div>
+</div>

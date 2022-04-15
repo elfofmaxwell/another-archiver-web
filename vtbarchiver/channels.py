@@ -10,7 +10,8 @@ from vtbarchiver.db_functions import get_db
 from vtbarchiver.fetch_video_list import add_talent_name as add_name
 from vtbarchiver.fetch_video_list import fetch_all, fetch_uploaded_list
 from vtbarchiver.management import login_required
-from vtbarchiver.misc_funcs import Pagination
+from vtbarchiver.misc_funcs import (Pagination, build_channel_detail,
+                                    build_video_overview)
 
 bp = Blueprint('channels', __name__, url_prefix='/channels')
 
@@ -33,15 +34,6 @@ def add_channel(new_channel_id):
 
 
 # single channel detail
-def build_channel_detail(channel_id: str = '', channel_name: str = '', thumb_url: str = '', talent_name: str = '', video_num: int = 0, checkpoint_idx: int = 0): 
-    return {
-        'channelId': channel_id,
-        'channelName': channel_name,
-        'thumbUrl': thumb_url,
-        'talentName': talent_name,
-        'videoNum': video_num,
-        'checkpointIndex': checkpoint_idx,
-    }
 
 def single_channel_detail(channel_id=''): 
     channel_detail = build_channel_detail()
@@ -62,18 +54,6 @@ def single_channel_detail(channel_id=''):
         return channel_detail
     finally: 
         cur.close()
-
-
-def build_video_overview(video_id: str='', title: str='', uploadDate: str='', duration: str='', uploadIndex: int=0, thumbUrl: str='', local_path: str=''): 
-    return {
-        'videoId': video_id, 
-        'title': title,
-        'uploadDate': uploadDate,
-        'duration': duration,
-        'uploadIndex': uploadIndex, 
-        'thumbUrl': thumbUrl,
-        'localPath': local_path,
-    }
 
 
 def single_channel_videos(channel_id: str, page=1, page_entry_num=5): 

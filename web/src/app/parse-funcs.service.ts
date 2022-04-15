@@ -38,7 +38,7 @@ export class ParseFuncsService {
   toIsoDateTimeUTC(dateString: string): string {
     const dateMomentObj = moment(dateString);
     if (dateMomentObj.isValid()) {
-      return dateMomentObj.utc(false).format();
+      return dateMomentObj.utc().format();
     } else {
       return '';
     }
@@ -55,6 +55,23 @@ export class ParseFuncsService {
 
   getToday(format: string='MMM DD, YYYY'): string {
     return moment().format(format);
+  }
+
+  getIsoToday(): string {
+    return moment.utc().format();
+  }
+
+  getUnixZeroIso(): string {
+    return moment.unix(0).utc().format();
+  }
+
+  isoDateToUnixStamp(isoDate: string): number {
+    const dateMomentObj = moment(isoDate);
+    if (dateMomentObj.isValid()) {
+      return dateMomentObj.unix();
+    } else {
+      return 0;
+    }
   }
 
   calculateDateDiff(isoStartDateTime: string, isoEndDateTime: string): number {

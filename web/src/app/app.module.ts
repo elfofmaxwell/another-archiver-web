@@ -16,6 +16,8 @@ import { NavbarComponent } from './navbar/navbar.component';
 import { SingleChannelComponent } from './single-channel/single-channel.component';
 import { VideoListComponent } from './video-list/video-list.component';
 import { SingleVideoComponent } from './single-video/single-video.component';
+import { VideosComponent } from './videos/videos.component';
+import { SearchVideoComponent } from './search-video/search-video.component';
 
 
 @NgModule({
@@ -29,7 +31,9 @@ import { SingleVideoComponent } from './single-video/single-video.component';
     VideoListComponent,
     ChannelStatsComponent,
     ChannelMgnComponent,
-    SingleVideoComponent
+    SingleVideoComponent,
+    VideosComponent,
+    SearchVideoComponent
   ],
   imports: [
     BrowserModule,

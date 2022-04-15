@@ -11,7 +11,7 @@
           <a class="nav-link" (click)="isMenuCollapsed = true" routerLink="channels">Channels</a>
         </li>
         <li class="nav-item mx-2">
-          <a class="nav-link" (click)="isMenuCollapsed = true">Videos</a>
+          <a class="nav-link" (click)="isMenuCollapsed = true" routerLink="videos">Videos</a>
         </li>
         <li *ngIf="authService.user.userName" class="nav-item mx-2">
           <a class="nav-link" (click)="isMenuCollapsed = true">Management</a>

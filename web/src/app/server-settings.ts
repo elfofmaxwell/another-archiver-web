@@ -159,3 +159,16 @@ export class ErrorMessage {
 export interface IDownloading {
   downloading: boolean;
 }
+
+export interface IQueryObj {
+  [param: string]: string | number | boolean | readonly (string | number | boolean)[];
+}
+
+export interface ISearchParams extends IQueryObj {
+  timeRange: string; 
+  tags: string;
+  talents: string;
+  searchKeys: string;
+  timeDescending: boolean; 
+  pageSize: number;
+}

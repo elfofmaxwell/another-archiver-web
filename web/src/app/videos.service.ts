@@ -11,6 +11,7 @@ import { AddedVideoDetail, ErrorMessage, IVideoList, VideoDetail } from './serve
 export class VideosService {
 
   private readonly SINGLE_VIDEO_URL = '/api/video/';
+  private readonly ALL_VIDEO_URL = '/api/videos';
   private readonly CHANNEL_API_URL = '/api/channel-videos/';
   private readonly GET_HEX_ID_URL = '/api/get-new-hex-vid';
   private readonly GET_TAG_SUGGESTION_URL = '/api/get-tag-suggestion';
@@ -19,42 +20,56 @@ export class VideosService {
   private readonly ADD_SINGLE_VIDEO_TALENT_URL = '/api/add-talent/';
   private readonly ADD_SINGLE_VIDEO_TYPE_URL = '/api/add-stream-type/';
   private readonly DELETE_VIDEO_URL = '/api/delete-video/';
+  private readonly SEARCH_VIDEO_URL = '/api/search'
 
   constructor(
     private http: HttpClient,
     private parseFuncs: ParseFuncsService
   ) { }
   
-  getSingleVideo(videoId: string): Observable<VideoDetail> {
+  getSingleVideo(videoId: string): Observable<VideoDetail|ErrorMessage> {
     return this.http.get<VideoDetail>(this.SINGLE_VIDEO_URL+videoId)
     .pipe(
       catchError(
-        ()=>of(new VideoDetail)
+        this.parseFuncs.parseHttpError
       )
     );
   }
   
 
-  getChannelVideos(channelId: string, page: number, pageEntryNum: number=5): Observable<IVideoList> {
+  getChannelVideos(channelId: string, page: number, pageEntryNum: number=5): Observable<IVideoList|ErrorMessage> {
     const queryUrl = `${this.CHANNEL_API_URL}${channelId}?`;
     const queryParams = new HttpParams({fromObject: {page: page,pageEntryNum: pageEntryNum}});
     return this.http.get<IVideoList>(`${queryUrl}${queryParams}`)
     .pipe(
       catchError(
-        () => of({videoNum: 0, videoList: []})
-      ), 
-      // format iso8601 upload date and durations
-      map(
-        (videoList: IVideoList): IVideoList => {
-          for (let video of videoList.videoList) {
-            video.uploadDate = this.parseFuncs.formatIsoDate(video.uploadDate);
-            video.duration = this.parseFuncs.formatIsoDuration(video.duration);
-          }
-          return videoList;
-        }
+        this.parseFuncs.parseHttpError
       )
     );
   }
+
+
+  getAllVideos(page: number, pageEntryNum: number=10): Observable<IVideoList|ErrorMessage> {
+    const queryParams = new HttpParams({fromObject: {page: page,pageEntryNum: pageEntryNum}});
+    return this.http.get<IVideoList>(this.ALL_VIDEO_URL+`?${queryParams}`)
+    .pipe(
+      catchError(
+        this.parseFuncs.parseHttpError
+      )
+    );
+  }
+
+
+  getSearchedVideos(queryStr: HttpParams): Observable<IVideoList|ErrorMessage> {
+    const queryUrl = this.SEARCH_VIDEO_URL+`?${queryStr}`;
+    return this.http.get<IVideoList>(queryUrl)
+    .pipe(
+      catchError(
+        this.parseFuncs.parseHttpError
+      )
+    );
+  }
+
 
   // get unique id for adding unarchived content
   getHexId (): Observable<string> {
@@ -65,6 +80,7 @@ export class VideosService {
       )
     );
   }
+
 
   getTagSuggestion (queryType: 'talents' | 'tags', queryStr: string): Observable<TagData[]> {
     const queryURL = `${this.GET_TAG_SUGGESTION_URL}?`
@@ -85,6 +101,7 @@ export class VideosService {
       )
     );
   }
+
 
   manuallyAddVideo (videoId: string='', unarchivedContent: boolean=false, title: string='', uploadDate: string='', duration: string='', thumbUrl: string='', channelId: string='', talentNames: string[]=[], stream_types: string[]=[]): Observable<AddedVideoDetail> {
     return this.http.post<AddedVideoDetail>(this.MANUALLY_ADD_VIDEO_URL, {
@@ -135,6 +152,7 @@ export class VideosService {
     );
   }
 
+
   addSingleVideoTypes (videoId: string, streamTypes: string[]): Observable<VideoDetail|ErrorMessage> {
     const queryUrl = this.ADD_SINGLE_VIDEO_TYPE_URL + videoId
     return this.http.post<VideoDetail>(queryUrl, streamTypes)
@@ -144,6 +162,7 @@ export class VideosService {
       )
     );
   }
+
 
   deleteVideo (videoId: string): Observable<VideoDetail|ErrorMessage> {
     const queryUrl = this.DELETE_VIDEO_URL + videoId;

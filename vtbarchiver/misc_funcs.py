@@ -109,3 +109,42 @@ def build_youtube_api():
     # create api client
     youtube = googleapiclient.discovery.build(api_service_name, api_version, credentials=credentials)
     return youtube
+
+
+def build_video_detail(title: str='', upload_date: str='', duration: str='', upload_index: int=0, thumb_url: str='', local_path: str='', video_id: str='', channel_id: str='', channel_name: str='', talent_names: list=[], stream_types: list=[]): 
+    return {
+        'title': title,
+        'uploadDate': upload_date,
+        'duration': duration,
+        'uploadIndex': upload_index, 
+        'thumbUrl': thumb_url,
+        'localPath': local_path,
+        'videoId': video_id,
+        'channelId': channel_id, 
+        'channelName': channel_name, 
+        'talentNames': talent_names, 
+        'streamTypes': stream_types
+    }
+
+
+def build_video_overview(video_id: str='', title: str='', uploadDate: str='', duration: str='', uploadIndex: int=0, thumbUrl: str='', local_path: str=''): 
+    return {
+        'videoId': video_id, 
+        'title': title,
+        'uploadDate': uploadDate,
+        'duration': duration,
+        'uploadIndex': uploadIndex, 
+        'thumbUrl': thumbUrl,
+        'localPath': local_path,
+    }
+
+
+def build_channel_detail(channel_id: str = '', channel_name: str = '', thumb_url: str = '', talent_name: str = '', video_num: int = 0, checkpoint_idx: int = 0): 
+    return {
+        'channelId': channel_id,
+        'channelName': channel_name,
+        'thumbUrl': thumb_url,
+        'talentName': talent_name,
+        'videoNum': video_num,
+        'checkpointIndex': checkpoint_idx,
+    }
