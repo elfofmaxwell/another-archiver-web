@@ -7,7 +7,7 @@ import { IUser } from './server-settings';
 @Injectable({
   providedIn: 'root'
 })
-export class AppGaurdService implements CanActivate {
+export class AppGuardService implements CanActivate {
 
   constructor(private router: Router, private authService: AuthService) { }
 

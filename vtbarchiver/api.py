@@ -2,9 +2,10 @@
 
 import os
 import subprocess
-from crypt import methods
 from time import sleep
 
+import psutil
+import yaml
 from flask import Blueprint, abort, current_app, g, jsonify, request, session
 
 from vtbarchiver.channels import (add_channel, delete_channel, edit_checkpoint,
@@ -14,8 +15,11 @@ from vtbarchiver.db_functions import (ChannelStats, get_db, get_new_hex_vid,
                                       regenerate_upload_index, tag_suggestions)
 from vtbarchiver.download_functions import check_lock
 from vtbarchiver.fetch_video_list import add_talent_name, fetch_all
+from vtbarchiver.local_file_management import (get_relpath_to_static,
+                                               scan_local_videos)
 from vtbarchiver.management import (api_login_required, check_password_hash,
-                                    login_required, try_login)
+                                    get_settings, login_required, put_settings,
+                                    try_login)
 from vtbarchiver.misc_funcs import build_youtube_api, tag_title
 from vtbarchiver.videos import (add_stream_type, add_talent,
                                 build_video_detail, search_video, single_video,
@@ -383,7 +387,62 @@ def videos_api():
     video_num, all_videos = videos(int(page), int(page_entry_num))
     return jsonify({'videoNum': video_num, 'videoList': all_videos})
 
+# search videos
 @bp.route('/search', methods=('GET', ))
 def search_video_api(): 
     video_num, all_videos = search_video()
     return jsonify({'videoNum': video_num, 'videoList': all_videos})
+
+
+# settings
+@bp.route('/settings', methods=('GET', 'PUT'))
+@api_login_required
+def settings_api(): 
+    if request.method == 'GET': 
+        return jsonify(get_settings())
+    if request.method == 'PUT': 
+        dl_config = request.json
+        return jsonify(put_settings(dl_config))
+
+
+
+
+
+# start download all channels
+@bp.route('/trigger-download', methods=('GET', ))
+@api_login_required
+def trigger_download_api(): 
+    if not check_lock():
+        flask_env = os.environ.copy()
+        subprocess.Popen(['flask', 'download-channels'], env=flask_env)
+    sleep(0.5)
+    return jsonify({'downloading': check_lock()})
+
+
+
+# stop download process
+@bp.route('/stop-tasks', methods=('GET',))
+@api_login_required
+def stop_tasks_api(): 
+    if check_lock(): 
+        lock_path = os.path.join(current_app.root_path, 'download.lock')
+        with open(lock_path) as f: 
+            working_pid = int(f.readline())
+        p = psutil.Process(working_pid)
+        p.terminate()
+        os.remove(lock_path)
+    sleep(0.5)
+    return jsonify({'downloading': check_lock()})
+    
+
+# scan for videos
+@bp.route('/scan-local', methods=('GET', ))
+@api_login_required
+def scan_local_api(): 
+    config_path = os.path.join(current_app.root_path, 'config.yaml')
+    with open(config_path) as f: 
+        config = yaml.safe_load(f)
+    scan_path = config['local_videos']
+    scan_local_videos(scan_path)
+    return jsonify({'scanned': True})
+

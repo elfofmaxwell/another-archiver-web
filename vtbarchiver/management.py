@@ -3,11 +3,9 @@
 
 import functools
 import getpass
-import os
-import subprocess
+from distutils.command.config import config
 
 import click
-import psutil
 import yaml
 from flask import (Blueprint, abort, current_app, flash, g, jsonify, redirect,
                    render_template, request, session, url_for)
@@ -71,103 +69,37 @@ def api_login_required(view):
     return wrapped_view
 
 
-# login page
-@bp.route('/login', methods=('GET', 'POST'))
-def login(): 
-    if request.method == 'POST': 
-        # get form contents
-        username = request.form['username']
-        password = request.form['password']
-
-        # search for user in db
-        db = get_db()
-        error = None
-        cur = db.cursor()
-        try: 
-            cur.execute('SELECT * FROM admin_list WHERE username = ?', (username, ))
-            user = cur.fetchone()
-        finally: 
-            cur.close()
-        
-        # check whether password is corret
-        if (not user) or (not check_password_hash(user['passwd_hash'], password)): 
-            error = 'Invalid username or password, please try again'
-
-        
-        # if correct, renew cookie and redirect to management panel
-        if error is None: 
-            session.clear()
-            session['user_id'] = user['id']
-            return redirect(url_for('management.settings'))
-        
-        # push error
-        flash(error)
-    
-    # show login page
-    return render_template('management/login.html')
-
-
-# logout
-@bp.route('/logout')
-def logout(): 
-    session.clear()
-    return redirect(url_for('home.index'))
-
-
-# settings
-@bp.route('/settings', methods=('GET', 'POST'))
-@login_required
-def settings(): 
+def get_settings(): 
     config_path = current_app.config['DL_CONF_PATH']
     with open(config_path) as f: 
         dl_configs = yaml.safe_load(f)
-
-    if request.method == 'POST': 
-        for config_key in dl_configs: 
-            dl_configs[config_key] = request.form[config_key]
-        with open(config_path, 'w') as f: 
-            yaml.safe_dump(dl_configs, f)
-    
-    return render_template('management/settings.html', dl_configs=dl_configs, is_downloading = check_lock())
-
-
-# start download all channels
-@bp.route('/trigger-download')
-@login_required
-def trigger_download(): 
-    if not check_lock():
-        flask_env = os.environ.copy()
-        subprocess.Popen(['flask', 'download-channels'], env=flask_env)
-
-    return redirect(url_for('management.settings'))
+    setting_dict = {}
+    slow_mode = dl_configs.get('slow_mode', '')
+    if slow_mode == 'False': 
+        setting_dict['slowMode'] = False
+    else: 
+        setting_dict['slowMode'] = True
+    setting_dict['sleepTime'] = int(dl_configs.get('sleep_time', 0))
+    setting_dict['cookiePath'] = dl_configs.get('cookie_path', '')
+    setting_dict['downloadPath'] = dl_configs.get('download_path')
+    setting_dict['scanPath'] = dl_configs.get('local_videos', '')
+    return setting_dict
 
 
-# stop download process
-@bp.route('/stop-tasks')
-@login_required
-def stop_tasks(): 
-    if check_lock(): 
-        lock_path = os.path.join(current_app.root_path, 'download.lock')
-        with open(lock_path) as f: 
-            working_pid = int(f.readline())
-        p = psutil.Process(working_pid)
-        p.terminate()
-        os.remove(lock_path)
-    
-    return redirect(url_for('management.settings'))
+def put_settings(setting_dict: dict):
+    dl_config = {}
+    slow_mode = setting_dict.get('slowMode', 'true')
+    print(slow_mode)
+    dl_config['slow_mode'] = str(slow_mode != 'false')
+    dl_config['sleep_time'] = str(setting_dict.get('sleepTime', ''))
+    dl_config['cookie_path'] = str(setting_dict.get('cookiePath', ''))
+    dl_config['download_path'] = str(setting_dict.get('downloadPath', ''))
+    dl_config['local_videos'] = str(setting_dict.get('scanPath', ''))
+    config_path = current_app.config['DL_CONF_PATH']
+    with open(config_path, 'w') as f: 
+        yaml.safe_dump(dl_config, f)
+    return get_settings()
 
-
-# scan for videos
-@bp.route('/scan-local')
-@login_required
-def scan_local(): 
-    config_path = os.path.join(current_app.root_path, 'config.yaml')
-    with open(config_path) as f: 
-        config = yaml.safe_load(f)
-    scan_path = config['local_videos']
-    scan_local_videos(scan_path)
-
-    return redirect(url_for('management.settings'))
 
 # use cli to add admin user
 @click.command('add-admin')

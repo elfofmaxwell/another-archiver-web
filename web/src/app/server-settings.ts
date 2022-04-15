@@ -160,6 +160,10 @@ export interface IDownloading {
   downloading: boolean;
 }
 
+export interface IScanned {
+  scanned: boolean;
+}
+
 export interface IQueryObj {
   [param: string]: string | number | boolean | readonly (string | number | boolean)[];
 }
@@ -172,3 +176,20 @@ export interface ISearchParams extends IQueryObj {
   timeDescending: boolean; 
   pageSize: number;
 }
+
+export class Settings {
+  slowMode: boolean; 
+  sleepTime: number;
+  cookiePath: string; 
+  downloadPath: string;
+  scanPath: string;
+
+  constructor(slowMode: boolean=true, sleepTime: number=30, cookiePath: string='', downloadPath: string='', scanPath: string='') {
+    this.slowMode = slowMode;
+    this.sleepTime = sleepTime;
+    this.cookiePath = cookiePath; 
+    this.downloadPath = downloadPath; 
+    this.scanPath = scanPath;
+  }
+}
+
