@@ -41,7 +41,7 @@ export class ChannelsComponent implements OnInit {
   }
 
   goToChannel(channelId: string): void {
-    this.router.navigate(['/channel', channelId]);
+    this.router.navigate(['/channel', channelId], {queryParams: {page: 1}});
   }
 
   toggleAddChannel(): void {
