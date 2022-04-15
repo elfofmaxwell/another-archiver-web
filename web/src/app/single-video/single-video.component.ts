@@ -1,7 +1,7 @@
 import { Location } from '@angular/common';
 import { Component, OnInit, ViewChild } from '@angular/core';
 import { NgForm } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { TagData, TagifySettings } from 'ngx-tagify';
 import { Observable, Subject } from 'rxjs';
@@ -12,6 +12,7 @@ import { AuthService } from '../auth.service';
 import { DownloaderService } from '../downloader.service';
 import { IMessage, MessageService } from '../message.service';
 import { ParseFuncsService } from '../parse-funcs.service';
+import { SearchService } from '../search.service';
 import { ErrorMessage, IDownloading, VideoDetail } from '../server-settings';
 import { VideosService } from '../videos.service';
 @Component({
@@ -29,7 +30,9 @@ export class SingleVideoComponent implements OnInit {
     private messageService: MessageService, 
     private location: Location, 
     private downloaderService: DownloaderService, 
-    private modalService: NgbModal
+    private modalService: NgbModal, 
+    private searchService: SearchService, 
+    private router: Router
   ) { }
   
   videoId = this.route.snapshot.paramMap.get('videoId');
@@ -88,6 +91,10 @@ export class SingleVideoComponent implements OnInit {
       );
     }
   }
+  onSearchTalent(talentName: string) {
+    const queryObj = this.searchService.paramsToQueryObj('', '', this.parseFuncs.listToTagDataList([talentName]), [], '', 10, true);
+    this.router.navigate(['/search'], {queryParams: queryObj});
+  }
 
   // stream type tags
   streamTypeTags: TagData[] = [];
@@ -117,6 +124,10 @@ export class SingleVideoComponent implements OnInit {
         }
       );
     }
+  }
+  onSearchType(typeName: string) {
+    const queryObj = this.searchService.paramsToQueryObj('', '', [], this.parseFuncs.listToTagDataList([typeName]), '', 10, true);
+    this.router.navigate(['/search'], {queryParams: queryObj});
   }
 
 

@@ -70,7 +70,7 @@
 <ng-container *ngIf="editTalentToggle; then editTalentBlock; else displayTalentBlock"></ng-container>
 <ng-template #displayTalentBlock>
   <div class="mt-2">
-    <span *ngFor="let talentName of videoDetail.talentNames" class="talent-badge m-1">{{talentName}}</span>
+    <span *ngFor="let talentName of videoDetail.talentNames" class="talent-badge m-1" (click)="onSearchTalent(talentName)">{{talentName}}</span>
     <span *ngIf="authService.user.userName" class="add-badge"><a><i class="iconfont icon-set" style="font-size: 1.5em;" (click)="editTalentToggle=!editTalentToggle;"></i></a></span>
   </div>
 </ng-template>
@@ -90,7 +90,7 @@
   <ng-container *ngIf="editStreamTypeToggle; then editStreamTypeBlock; else displayStreamTypeBlock"></ng-container>
   <ng-template #displayStreamTypeBlock>
     <div class="mt-2">
-      <span *ngFor="let streamType of videoDetail.streamTypes" class="talent-badge m-1">{{streamType}}</span>
+      <span *ngFor="let streamType of videoDetail.streamTypes" class="talent-badge m-1" (click)="onSearchType(streamType)">{{streamType}}</span>
       <span *ngIf="authService.user.userName" class="add-badge"><a><i class="iconfont icon-set" style="font-size: 1.5em;" (click)="editStreamTypeToggle=!editStreamTypeToggle"></i></a></span>
     </div>
   </ng-template>

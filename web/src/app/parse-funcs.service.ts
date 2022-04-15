@@ -57,8 +57,8 @@ export class ParseFuncsService {
     return moment().format(format);
   }
 
-  getIsoToday(): string {
-    return moment.utc().format();
+  getIsoTomorrow(): string {
+    return moment.utc().add(1, 'days').format();
   }
 
   getUnixZeroIso(): string {

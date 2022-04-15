@@ -16,11 +16,11 @@ export class SearchService {
   
 
   paramsToQueryObj (
-    startDate: string, 
-    endDate: string, 
-    talentTags: TagData[], 
-    streamTypeTags: TagData[], 
-    searchKeys: string, 
+    startDate: string = '', 
+    endDate: string = '', 
+    talentTags: TagData[] = [], 
+    streamTypeTags: TagData[] = [], 
+    searchKeys: string = '', 
     pageSize: number = 10, 
     timeDescending: boolean = false
     ) {
@@ -28,7 +28,7 @@ export class SearchService {
         startDate = this.parseFuncs.getUnixZeroIso();
       }
       if (!endDate) {
-        endDate = this.parseFuncs.getIsoToday();
+        endDate = this.parseFuncs.getIsoTomorrow();
       }
       const queryDate = `${startDate};${endDate}`;
       const queryTalent = this.parseFuncs.tagDataListToList(talentTags).join(';');

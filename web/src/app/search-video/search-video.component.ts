@@ -115,7 +115,7 @@ export class SearchVideoComponent implements OnInit {
             this.startDate = undefined;
           }
           let endDate: string = '';
-          if (this.parseFuncs.getIsoToday() !== dateRange[1]) {
+          if (this.parseFuncs.getIsoTomorrow() !== dateRange[1]) {
             endDate = this.parseFuncs.formatIsoDate(dateRange[1], 'YYYY-MM-DD');
             searchSum += `to ${endDate} `;
             this.endDate = endDate;
@@ -144,6 +144,7 @@ export class SearchVideoComponent implements OnInit {
           if (queryObj.searchKeys) {
             this.searchKeys = queryObj.searchKeys;
           }
+          this.timeDescending = queryObj.timeDescending;
           if (searchSum !== 'Showing result ') {
             this.searchSum = searchSum;
           }
