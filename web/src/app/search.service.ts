@@ -62,6 +62,7 @@ export class SearchService {
       searchKeys: urlSnapshot.get('searchKeys') || '', 
       timeDescending: urlSnapshot.get('timeDescending')==='true' ? true : false, 
       pageSize: Number(urlSnapshot.get('pageSize')) || 10, 
+      page: Number(urlSnapshot.get('page')) || 1, 
     }
     return queryObj;
   }

@@ -175,6 +175,7 @@ export interface ISearchParams extends IQueryObj {
   searchKeys: string;
   timeDescending: boolean; 
   pageSize: number;
+  page: number;
 }
 
 export class Settings {

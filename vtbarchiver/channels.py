@@ -60,6 +60,7 @@ def single_channel_videos(channel_id: str, page=1, page_entry_num=5):
         cur.execute("SELECT COUNT(*) video_num FROM video_list WHERE channel_id = ?", (channel_id, ))
         video_num = cur.fetchone()['video_num']
         page_num = max(ceil(video_num/page_entry_num), 1)
+        page = min(page, page_num)
         cur.execute(
             '''
             SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.duration duration, vl.thumb_url thumb_url, vl.upload_idx upload_idx, lv.video_path local_path

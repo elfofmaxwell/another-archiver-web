@@ -35,13 +35,12 @@ export class VideoListComponent implements OnChanges {
   }
   set page(value: number) {
     this._page = value;
-    this.jumpToPage = value;
     this.getVideos(value, this.pageSize);
   }
 
   @Input() reloadTrigger: boolean = false;
   ngOnChanges(changes: SimpleChanges): void {
-    this.getVideos(this.page, this.pageSize);
+    this.page = Number(this.route.snapshot.queryParamMap.get('page')) || 1
   }
 
   processVideoList: (videoList: IVideoList|ErrorMessage)=>void = (videoList) => {
@@ -55,6 +54,10 @@ export class VideoListComponent implements OnChanges {
         videoOverview.duration = this.parseFuncs.formatIsoDuration(videoOverview.duration);
       }
       this.pageNum = Math.ceil(videoList.videoNum/this.pageSize);
+      if (this._page > this.pageNum) {
+        this._page = this.pageNum;
+      }
+      this.router.navigate([this.router.url.split('?')[0]], {queryParams: {page: this._page}, queryParamsHandling: 'merge'})
     }
   }
 

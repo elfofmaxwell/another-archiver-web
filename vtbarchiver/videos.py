@@ -25,6 +25,8 @@ def videos(page, page_entry_num=10):
         cur.execute("SELECT COUNT(*) video_num FROM video_list")
         video_num = cur.fetchone()['video_num']
         page_num = max(ceil(video_num/page_entry_num), 1)
+        if page > page_num: 
+            page = page_num
         cur.execute(
             '''
             SELECT vl.video_id video_id, vl.title title, vl.upload_date upload_date, vl.duration duration, vl.upload_idx upload_idx, vl.thumb_url thumb_url, lv.video_path local_path, ch.channel_name channel_name
@@ -161,6 +163,8 @@ def search_video():
     reduced_result = find_common_items(*list_for_reduction)
     video_num = len(reduced_result)
     page_num = max(ceil(video_num/page_entry_num), 1)
+    if page > page_num: 
+        page = page_num
     if not time_descending: 
         video_id_for_query = reduced_result[(page-1)*page_entry_num:page*page_entry_num]
     else: 
