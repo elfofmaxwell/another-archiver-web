@@ -7,76 +7,97 @@ import google_auth_oauthlib
 import googleapiclient.discovery
 import googleapiclient.errors
 import isodate
-from flask import current_app, g
+from flask import current_app
 from sudachipy import dictionary, tokenizer
 
 
-def get_pagination(current_page, page_num, pagination_length): 
-    if pagination_length > page_num: 
-        pagination_list = list(range(1, page_num+1))
-        return pagination_list
-    tmp_pagination_list = list(range(current_page - (pagination_length-1)//2, current_page - (pagination_length-1)//2 + pagination_length))
-    pagination_list = tmp_pagination_list[:]
-    if tmp_pagination_list[0] < 1: 
-        pagination_list = [i + 1 - tmp_pagination_list[0] for i in tmp_pagination_list]
-    elif tmp_pagination_list[-1] > page_num: 
-        pagination_list = [i - (tmp_pagination_list[-1]-page_num) for i in tmp_pagination_list]
-    return pagination_list
+def to_isoformat(date_obj: datetime.date) -> str: 
+    """generate current date in server side
 
+    Args:
+        date_obj (datetime.date): datetime.date object to parse
 
-class Pagination(): 
-    def __init__(self, current_page, page_num, pagination_length) -> None:
-        self.list = get_pagination(current_page, page_num, pagination_length)
-        self.active_page = current_page
-        self.links = []
-        self.first_link = ''
-        self.last_link = ''
-
-
-def to_isoformat(date_obj): 
+    Returns:
+        str: YYYY-MM-DDThh-mm-ssZ utc iso time string
+    """
     return datetime.datetime.isoformat(date_obj, timespec="seconds")+'Z'
 
 
-def calculate_date_from_delta(delta_days: int): 
-    '''
-    calculate the date since which delta_time days have passed
-    delta_time: days since now
-    '''
+def calculate_date_from_delta(delta_days: int) -> str: 
+    """calculate the date `delta_days` days ago from current time
+
+    Args:
+        delta_days (int): number of days
+
+    Returns:
+        str: date in iso string
+    """
     return to_isoformat(datetime.datetime.utcnow() - datetime.timedelta(days=delta_days))+'Z'
 
 
-def calculate_date_week(delta_week: int): 
+def calculate_date_week(delta_week: int) -> str: 
+    """calculate the date `delta_week` weeks ago from current time
+
+    Args:
+        delta_week (int): delta_week: number of weeks
+
+    Returns:
+        str: date in iso string
+    """
     return to_isoformat(datetime.datetime.utcnow() - datetime.timedelta(days=delta_week))+'Z'
 
 
-def week_stops(start_date_str, end_date_str): 
-    '''
-    input: ISO 8601 date, return list from date earlier than that day to today with step size of 1 week, from earlist to latest
-    '''
+def week_stops(start_date_str: str, end_date_str: str) -> list[str]: 
+    """calculate the intervals for weekly statistics; if diff between start date and end date is less than 1 week, the interval would be 1 day rather than 1 week
+
+    Args:
+        start_date_str (str): ISO 8601 date for lower bound of query duration
+        end_date_str (str): ISO 8601 date for upper bound of query duration
+
+    Returns:
+        list[str]: list from date earlier than that day to today with step size of 1 week, from earlist to latest
+    """
+    # remove 'z'
     end_date_obj = datetime.datetime.fromisoformat(end_date_str[:-1])
     start_date_obj = datetime.datetime.fromisoformat(start_date_str[:-1])
     week_stop_list = [end_date_obj]
     current_stop = week_stop_list[0]
 
+    # calculate diff between start date and end date 
     if (end_date_obj - start_date_obj).days > 7: 
         step_size = datetime.timedelta(weeks=1)
     else: 
         step_size = datetime.timedelta(days=1)
+    # calculate previous stops based on interval
     while current_stop > start_date_obj: 
         current_stop = current_stop - step_size
         week_stop_list.append(current_stop)
+    # reverse the list so that the stops are from oldest to newest
     week_stop_list.reverse()
     return list(map(to_isoformat, week_stop_list))
 
 
-def parse_duration(duration_str_pt): 
+def parse_duration(duration_str_pt: str) -> int: 
+    """parse iso duration string to seconds
+
+    Args:
+        duration_str_pt (str): iso duration string
+
+    Returns:
+        int: duration length in second
+    """
     return isodate.parse_duration(duration_str_pt).seconds
 
 
 def tag_title(title: str) -> str: 
-    '''
-    return tokenized title based on split mode A
-    '''
+    """tokenize title based on split mode A, used for full text search
+
+    Args:
+        title (str): string for tokenization
+
+    Returns:
+        str: tokenized input
+    """
     tokenizer_obj = dictionary.Dictionary().create()
     mode = tokenizer.Tokenizer.SplitMode.A
     tagged_title =' '.join([m.surface() for m in tokenizer_obj.tokenize(title, mode)])
@@ -84,6 +105,11 @@ def tag_title(title: str) -> str:
 
 
 def build_youtube_api():
+    """generate youtube client
+
+    Returns:
+        YouTubeApiClient: youtube api client
+    """
     # set api credentials
     scopes = ['https://www.googleapis.com/auth/youtube.force-ssl']
     os.environ["OAUTHLIB_INSECURE_TRANSPORT"] = "0"
@@ -111,7 +137,25 @@ def build_youtube_api():
     return youtube
 
 
-def build_video_detail(title: str='', upload_date: str='', duration: str='', upload_index: int=0, thumb_url: str='', local_path: str='', video_id: str='', channel_id: str='', channel_name: str='', talent_names: list=[], stream_types: list=[]): 
+def build_video_detail(title: str='', upload_date: str='', duration: str='', upload_index: int=0, thumb_url: str='', local_path: str='', video_id: str='', channel_id: str='', channel_name: str='', talent_names: list[str]=[], stream_types: list[str]=[]) -> dict: 
+    """use arguments to generate a jsonifiable dict for video detail api
+
+    Args:
+        title (str, optional): video title. Defaults to ''.
+        upload_date (str, optional): upload datetime in iso8601. Defaults to ''.
+        duration (str, optional): duration in iso8601. Defaults to ''.
+        upload_index (int, optional): upload index for the video in its channel. Defaults to 0.
+        thumb_url (str, optional): thumbnail picture url. Defaults to ''.
+        local_path (str, optional): local path for archived video. Defaults to ''.
+        video_id (str, optional): video ID. Defaults to ''.
+        channel_id (str, optional): channel ID of the uploader. Defaults to ''.
+        channel_name (str, optional): channel Name of the uploader. Defaults to ''.
+        talent_names (list[str], optional): list of talents who participated in the video. Defaults to [].
+        stream_types (list[str], optional): list of type tags of the video. Defaults to [].
+
+    Returns:
+        dict: jsonifiable dict for video detail api
+    """
     return {
         'title': title,
         'uploadDate': upload_date,
@@ -127,7 +171,21 @@ def build_video_detail(title: str='', upload_date: str='', duration: str='', upl
     }
 
 
-def build_video_overview(video_id: str='', title: str='', uploadDate: str='', duration: str='', uploadIndex: int=0, thumbUrl: str='', local_path: str=''): 
+def build_video_overview(video_id: str='', title: str='', uploadDate: str='', duration: str='', uploadIndex: int=0, thumbUrl: str='', local_path: str='') -> dict: 
+    """use arguments to generate a jsonifiable dict for video overview api
+
+    Args:
+        video_id (str, optional): video ID. Defaults to ''.
+        title (str, optional): video title. Defaults to ''.
+        uploadDate (str, optional): upload datetime in iso8601. Defaults to ''.
+        duration (str, optional): video duration in iso8601. Defaults to ''.
+        uploadIndex (int, optional): upload index for the video in its channel. Defaults to 0.
+        thumbUrl (str, optional): thumbnail picture url. Defaults to ''.
+        local_path (str, optional): local path for archived video. Defaults to ''.
+
+    Returns:
+        dict: jsonifiable dict for video overview api
+    """
     return {
         'videoId': video_id, 
         'title': title,
@@ -139,7 +197,20 @@ def build_video_overview(video_id: str='', title: str='', uploadDate: str='', du
     }
 
 
-def build_channel_detail(channel_id: str = '', channel_name: str = '', thumb_url: str = '', talent_name: str = '', video_num: int = 0, checkpoint_idx: int = 0): 
+def build_channel_detail(channel_id: str = '', channel_name: str = '', thumb_url: str = '', talent_name: str = '', video_num: int = 0, checkpoint_idx: int = 0) -> dict: 
+    """use arguments to generate a jsonifiable dict for channel detail api
+
+    Args:
+        channel_id (str, optional): channel ID. Defaults to ''.
+        channel_name (str, optional): channel Name. Defaults to ''.
+        thumb_url (str, optional): picture url for channel thumbnail. Defaults to ''.
+        talent_name (str, optional): the name of the channel owner. Defaults to ''.
+        video_num (int, optional): number of videos in the channel. Defaults to 0.
+        checkpoint_idx (int, optional): current download checkpoint of the channel. Defaults to 0.
+
+    Returns:
+        dict: jsonifiable dict for channel detail api
+    """
     return {
         'channelId': channel_id,
         'channelName': channel_name,

@@ -15,11 +15,9 @@ from vtbarchiver.db_functions import (ChannelStats, get_db, get_new_hex_vid,
                                       regenerate_upload_index, tag_suggestions)
 from vtbarchiver.download_functions import check_lock
 from vtbarchiver.fetch_video_list import add_talent_name, fetch_all
-from vtbarchiver.local_file_management import (get_relpath_to_static,
-                                               scan_local_videos)
-from vtbarchiver.management import (api_login_required, check_password_hash,
-                                    get_settings, login_required, put_settings,
-                                    try_login)
+from vtbarchiver.local_file_management import scan_local_videos
+from vtbarchiver.management import (api_login_required, get_settings,
+                                    put_settings, try_login)
 from vtbarchiver.misc_funcs import build_youtube_api, tag_title
 from vtbarchiver.videos import (add_stream_type, add_talent,
                                 build_video_detail, search_video, single_video,

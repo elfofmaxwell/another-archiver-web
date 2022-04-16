@@ -7,15 +7,11 @@ from distutils.command.config import config
 
 import click
 import yaml
-from flask import (Blueprint, abort, current_app, flash, g, jsonify, redirect,
-                   render_template, request, session, url_for)
+from flask import Blueprint, abort, current_app, g, redirect, session, url_for
 from flask.cli import with_appcontext
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from vtbarchiver.db_functions import get_db, tag_suggestions
-from vtbarchiver.download_functions import check_lock
-from vtbarchiver.local_file_management import (get_relpath_to_static,
-                                               scan_local_videos)
+from vtbarchiver.db_functions import get_db
 from vtbarchiver.misc_funcs import tag_title
 
 bp = Blueprint('management', __name__, url_prefix='/management')

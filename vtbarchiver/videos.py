@@ -4,16 +4,14 @@ import datetime
 import urllib.parse
 from math import ceil
 
-from flask import (Blueprint, current_app, flash, g, jsonify, redirect,
-                   render_template, request, url_for)
+from flask import Blueprint, request
 
 from vtbarchiver.channels import build_video_overview
 from vtbarchiver.db_functions import (find_common_items, find_tags,
                                       full_text_search, get_db,
                                       time_range_filter)
 from vtbarchiver.local_file_management import get_relpath_to_static
-from vtbarchiver.management import api_login_required, login_required
-from vtbarchiver.misc_funcs import Pagination, build_video_detail, tag_title
+from vtbarchiver.misc_funcs import build_video_detail, tag_title
 
 bp = Blueprint('videos', __name__, url_prefix='/videos')
 

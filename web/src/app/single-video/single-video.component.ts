@@ -57,7 +57,7 @@ export class SingleVideoComponent implements OnInit {
       modalContent, 
       {
         centered: true,
-        size: 'lg',
+        size: 'xl',
       }
     )
   }
