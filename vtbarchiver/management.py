@@ -20,6 +20,8 @@ bp = Blueprint('management', __name__, url_prefix='/management')
 # load user with cookie
 @bp.before_app_request
 def load_logged_in_user(): 
+    """load user information to current `g`
+    """
     # load cookie
     user_id = session.get('user_id')
 
@@ -37,26 +39,24 @@ def load_logged_in_user():
             cur.close()
 
 
-# login required wrapper
-def login_required(view): 
-    @functools.wraps(view)
-    
-    def wrapped_view(**kwargs): 
-        # if no user in current request, redirect for login
-        if g.user is None: 
-            return redirect(url_for('management.login'))
-        # else excute view
-        return view(**kwargs)
-    
-    return wrapped_view
-
-
 # login required wrapper for api
-def api_login_required(view): 
+def api_login_required(view)->function: 
+    """factory for a decorator to make view function require login for apis
+
+    Args:
+        view (function): view function that requires login
+
+    Returns:
+        function: the decorator
+    """
     @functools.wraps(view)
-    
-    def wrapped_view(**kwargs): 
-        # if no user in current request, redirect for login
+    def wrapped_view(**kwargs)->function: 
+        """a decorator to make view function require login for apis
+
+        Returns:
+            function: wrapped view function
+        """
+        # if no user in current request, abort in 400
         if g.user is None: 
             abort(400)
         # else excute view
@@ -65,27 +65,41 @@ def api_login_required(view):
     return wrapped_view
 
 
-def get_settings(): 
+def get_settings()->dict: 
+    """get settings in dict form from local config.yaml
+
+    Returns:
+        dict: dict with settings
+    """
     config_path = current_app.config['DL_CONF_PATH']
     with open(config_path) as f: 
         dl_configs = yaml.safe_load(f)
     setting_dict = {}
+    # convert string "True" or "False" to boolean
     slow_mode = dl_configs.get('slow_mode', '')
     if slow_mode == 'False': 
         setting_dict['slowMode'] = False
     else: 
         setting_dict['slowMode'] = True
+    # get value and set default value if there is no valid entry
     setting_dict['sleepTime'] = int(dl_configs.get('sleep_time', 0))
     setting_dict['cookiePath'] = dl_configs.get('cookie_path', '')
-    setting_dict['downloadPath'] = dl_configs.get('download_path')
+    setting_dict['downloadPath'] = dl_configs.get('download_path', '')
     setting_dict['scanPath'] = dl_configs.get('local_videos', '')
     return setting_dict
 
 
-def put_settings(setting_dict: dict):
+def put_settings(setting_dict: dict)->dict:
+    """put settings in the setting dict into config.yaml
+
+    Args:
+        setting_dict (dict): dict with settings
+
+    Returns:
+        dict: current setting dict from the updated config.yaml
+    """
     dl_config = {}
     slow_mode = setting_dict.get('slowMode', 'true')
-    print(slow_mode)
     dl_config['slow_mode'] = str(slow_mode != 'false')
     dl_config['sleep_time'] = str(setting_dict.get('sleepTime', ''))
     dl_config['cookie_path'] = str(setting_dict.get('cookiePath', ''))
@@ -101,6 +115,8 @@ def put_settings(setting_dict: dict):
 @click.command('add-admin')
 @with_appcontext
 def add_admin_command(): 
+    """cli interface to add a manager account
+    """
     while True: 
         # check if username is empty
         while True: 
@@ -132,18 +148,25 @@ def add_admin_command():
 @click.command('reindex-search')
 @with_appcontext
 def regenerate_search_index(): 
+    """cli interface to regenerate search index for all videos
+    """
     db = get_db()
     cur = db.cursor()
     try: 
+        # delete current index
         cur.execute('DELETE FROM search_video')
+        # get video id and title for videos
         cur.execute('SELECT video_id, title FROM video_list')
         video_list = cur.fetchall()
         for single_video in video_list: 
+            # for each video, get talent names and stream types, concatenate the tags to form searching text
             cur.execute('SELECT talent_name FROM talent_participation WHERE video_id = ?', (single_video['video_id'], ))
             talent_names = ';'.join([i['talent_name'] for i in cur.fetchall()])
             cur.execute('SELECT stream_type FROM stream_type WHERE video_id = ?', (single_video['video_id'], ))
             stream_type = ';'.join([i['stream_type'] for i in cur.fetchall()])
+            # tokenize the title
             tagged_title = tag_title(single_video['title'])
+            # dump the generated indices
             cur.execute(
                 'INSERT INTO search_video (video_id, title, tagged_title, talents, stream_type) VALUES (?, ?, ?, ?, ?)', 
                 (single_video['video_id'], single_video['title'], tagged_title, talent_names, stream_type)
@@ -151,28 +174,41 @@ def regenerate_search_index():
     except: 
         raise
     else: 
+        # display information and submit changes if there is nothing wrong
         click.echo('Search index reganerated. ')
         db.commit()
     finally: 
         cur.close()
 
 
-def try_login(username, password): 
+class UserInfo(): 
+    def __init__(self, userid=-1, username='') -> None:
+        """user info class
 
-    class UserInfo(): 
-        def __init__(self, userid=-1, username='') -> None:
-            '''
-            userid: int, default -1
-            username: string, default ''
-            '''
-            self.userid = userid
-            self.username = username
-            
+        Args:
+            userid (int, optional): user id. Defaults to -1.
+            username (str, optional): user name. Defaults to ''.
+        """
+        self.userid = userid
+        self.username = username
+
+
+def try_login(username, password)->UserInfo: 
+    """login a user
+
+    Args:
+        username (str): username
+        password (str): password
+
+    Returns:
+        UserInfo: information of logged in user, if login failed, username would be empty
+    """
 
     db = get_db()
     error = None
     cur = db.cursor()
     try: 
+        # get user info from db
         cur.execute('SELECT * FROM admin_list WHERE username = ?', (username, ))
         user = cur.fetchone()
     finally: 
@@ -181,13 +217,11 @@ def try_login(username, password):
     # check whether password is corret
     if (not user) or (not check_password_hash(user['passwd_hash'], password)): 
         error = 'Invalid username or password, please try again'
-
-    
-    # if correct, renew cookie and redirect to management panel
+    # if correct, renew cookie and return the logged in user's info
     if error is None: 
         session.clear()
         session['user_id'] = user['id']
         session['username'] = user['username']
         return UserInfo(user['id'], user['username'])
-    
+    # if login failed, return an empty user info obj
     return UserInfo()
