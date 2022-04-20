@@ -58,19 +58,19 @@ def week_stops(start_date_str: str, end_date_str: str) -> list[str]:
         list[str]: list from date earlier than that day to today with step size of 1 week, from earlist to latest
     """
     # remove 'z', then push the end date to next monday
-    end_date_obj_original = datetime.datetime.fromisoformat(end_date_str[:-1])
-    start_date_obj = datetime.datetime.fromisoformat(start_date_str[:-1])
-    week_stop_list = [end_date_obj]
-    current_stop = week_stop_list[0]
+    end_date_obj_original = datetime.datetime.fromisoformat(end_date_str.split('T')[0])
+    start_date_obj = datetime.datetime.fromisoformat(start_date_str.split('T')[0])
 
     # calculate diff between start date and end date 
-    if (end_date_obj - start_date_obj).days > 7: 
+    if (end_date_obj_original - start_date_obj).days > 7: 
         step_size = datetime.timedelta(weeks=1)
         end_date_obj = end_date_obj_original + datetime.timedelta(days=(7 - end_date_obj_original.weekday()) % 7)
     else: 
         step_size = datetime.timedelta(days=1)
         end_date_obj = end_date_obj_original
     # calculate previous stops based on interval
+    week_stop_list = [end_date_obj]
+    current_stop = week_stop_list[0]
     while current_stop > start_date_obj: 
         current_stop = current_stop - step_size
         week_stop_list.append(current_stop)
