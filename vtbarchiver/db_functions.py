@@ -248,7 +248,7 @@ class ChannelStats():
                 FROM talent_participation tp 
                 JOIN video_list vl 
                 ON tp.video_id = vl.video_id
-                WHERE vl.channel_id = ? and vl.upload_date > ? AND vl.upload_date < ?
+                WHERE vl.channel_id = ? and vl.upload_date >= ? AND vl.upload_date < ?
                 GROUP BY tp.talent_name
                 '''
             , (self.channel_id, lower_date_stamp, upper_date_stamp))
@@ -265,7 +265,7 @@ class ChannelStats():
                 FROM talent_participation tp 
                 JOIN video_list vl 
                 ON tp.video_id = vl.video_id 
-                WHERE vl.channel_id = ? AND vl.upload_date > ? AND vl.upload_date < ?
+                WHERE vl.channel_id = ? AND vl.upload_date >= ? AND vl.upload_date < ?
                 GROUP BY tp.video_id 
                 HAVING COUNT(*)=1;
                 ''', (self.channel_id, lower_date_stamp, upper_date_stamp)
@@ -303,7 +303,7 @@ class ChannelStats():
                 FROM stream_type st 
                 JOIN video_list vl 
                 ON st.video_id = vl.video_id
-                WHERE vl.channel_id = ? and vl.upload_date > ? AND vl.upload_date < ?
+                WHERE vl.channel_id = ? and vl.upload_date >= ? AND vl.upload_date < ?
                 GROUP BY st.stream_type
                 '''
             , (self.channel_id, lower_date_stamp, upper_date_stamp))
@@ -320,7 +320,7 @@ class ChannelStats():
                 FROM video_list vl
                 LEFT OUTER JOIN stream_type st
                 ON vl.video_id = st.video_id
-                WHERE (st.video_id IS NULL) AND vl.channel_id=? AND vl.upload_date > ? AND vl.upload_date < ?
+                WHERE (st.video_id IS NULL) AND vl.channel_id=? AND vl.upload_date >= ? AND vl.upload_date < ?
                 ''', (self.channel_id, lower_date_stamp, upper_date_stamp)
             )
             type_count_dict['streamType'].append("unknown")
@@ -366,7 +366,7 @@ class ChannelStats():
                 # for each week, get duration of each video
                 cur.execute(
                     '''
-                    SELECT video_id, duration FROM video_list WHERE channel_id = ? AND upload_date > ? AND upload_date < ?
+                    SELECT video_id, duration FROM video_list WHERE channel_id = ? AND upload_date >= ? AND upload_date < ?
                     ''', (self.channel_id, week_stop_list[i], week_stop_list[i+1])
                 )
                 week_duration_list = list(map(parse_duration, [i['duration'] for i in cur.fetchall()]))
@@ -441,7 +441,7 @@ class ChannelStats():
             # get video duration for each video within the date range
             cur.execute(
                 '''
-                SELECT duration FROM video_list WHERE channel_id = ? AND upload_date > ? AND upload_date < ?
+                SELECT duration FROM video_list WHERE channel_id = ? AND upload_date >= ? AND upload_date < ?
                 ''', (self.channel_id, lower_date_stamp, upper_date_stamp)
             )
             # convert the dict list to duration numerical list
@@ -495,7 +495,7 @@ class ChannelStats():
                 # count the number of videos in each time interval
                 cur.execute(
                     '''
-                    SELECT COUNT(*) num FROM video_list WHERE channel_id = ? AND upload_date > ? AND upload_date < ?
+                    SELECT COUNT(*) num FROM video_list WHERE channel_id = ? AND upload_date >= ? AND upload_date < ?
                     ''', (self.channel_id, week_stop_list[i], week_stop_list[i+1])
                 )
                 num_dict['week'].append(week_stop_list[i])
