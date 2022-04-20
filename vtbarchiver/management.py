@@ -40,7 +40,7 @@ def load_logged_in_user():
 
 
 # login required wrapper for api
-def api_login_required(view)->function: 
+def api_login_required(view): 
     """factory for a decorator to make view function require login for apis
 
     Args:
@@ -50,7 +50,7 @@ def api_login_required(view)->function:
         function: the decorator
     """
     @functools.wraps(view)
-    def wrapped_view(**kwargs)->function: 
+    def wrapped_view(**kwargs): 
         """a decorator to make view function require login for apis
 
         Returns:

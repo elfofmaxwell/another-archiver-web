@@ -399,7 +399,7 @@ class ChannelStats():
         return list of dict: distribution of video length, <30min, 30-60, 60-90, 90-120, 120-150, 150-180, 180-
         '''
         # function to filter videos within given duration range
-        def duration_filter_factory(min_duration: int, max_duration: int=-1)->function: 
+        def duration_filter_factory(min_duration: int, max_duration: int=-1): 
             """generate a function that judges whether a given duration is in specified duration range
 
             Args:
