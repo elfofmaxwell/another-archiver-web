@@ -17,6 +17,7 @@ export class ChannelsComponent implements OnInit {
     public authService: AuthService
   ) { }
 
+  fetchingChannel: boolean = false;
   channelList: ChannelOverview[] = [];
   addChannelField: boolean = false;
   newChannelId: string = '';
@@ -66,8 +67,10 @@ export class ChannelsComponent implements OnInit {
   }
 
   fetchAllChannels(): void {
+    this.fetchingChannel = true;
     this.channelsService.fetchAllChannel().subscribe(
       (fetchedChannelList: ChannelOverview[]) => {
+        this.fetchingChannel = false;
         if (fetchedChannelList.length === this.channelList.length) {
           this.fetchFailedChannels = [];
           this.fetchChannelResult = true;
