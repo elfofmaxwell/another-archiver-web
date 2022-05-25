@@ -78,7 +78,7 @@ def download_single_video(video_id, sequenced):
         dlp_args = [
             'yt-dlp', 
             '--path', video_info['date_path'], 
-            r'-o "%(id)s/%(id)s.%(ext)s"',
+            '-o', r'%(id)s/%(id)s.%(ext)s',
             '--write-thumbnail', 
             '--write-info-json',
             '--write-description', 
