@@ -6,6 +6,7 @@ from flask import current_app, g
 
 from vtbarchiver.db_functions import get_db
 
+
 def scan_local_videos(video_dir): 
     db = get_db()
     cur = db.cursor()
@@ -15,7 +16,7 @@ def scan_local_videos(video_dir):
             for file_name_full in file_names: 
                 file_name, file_ext = os.path.splitext(file_name_full)
                 if file_ext.lower() in ('.mp4', '.webm'): 
-                    pseudo_vid = file_name[-12:-1]
+                    pseudo_vid = file_name
                     cur.execute('SELECT id FROM video_list WHERE video_id=?', (pseudo_vid, ))
                     if cur.fetchall(): 
                         video_id = pseudo_vid

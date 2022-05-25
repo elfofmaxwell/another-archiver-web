@@ -6,11 +6,18 @@ from vtbarchiver.db_functions import get_db
 from vtbarchiver.misc_funcs import build_youtube_api
 
 
-def fetch_channel(channel_id): 
-    '''
-    args: channel_id (str)
-    Create channel_list table and fetch channel info from youtube; initialize checkpoint at 0 (meaningful checkpoint starting at 1)
-    '''
+def fetch_channel(channel_id: str)->dict: 
+    """update channel information of the given channel from youtube api
+
+    Args:
+        channel_id (string): Channel ID
+
+    Raises:
+        ValueError: If the channel ID is not applicable, the error is raised
+
+    Returns:
+        dict: channel overview dict
+    """
     youtube = build_youtube_api()
     
 
@@ -48,11 +55,19 @@ def fetch_channel(channel_id):
         cur.close()
 
 
-def update_checkpoint(channel_id: str, checkpoint_idx=0, video_id='', offset=0): 
-    '''
-    args: channel_id (str); checkpoint_idx (int, key arg, optional); video_id(str, key arg, optional); offset (int, key arg, optional)
-    move checkpoint for a given channel. Priority: checkpoint_idx > video_id > offset
-    '''
+def update_checkpoint(channel_id: str, checkpoint_idx=0, video_id='', offset=0)->int: 
+    """Update checkpoint index of a channel. Priority: checkpoint index > video ID > offset
+
+    Args:
+        channel_id (str): channel ID to be updated
+        checkpoint_idx (int, optional): new checkpoint index. Defaults to 0.
+        video_id (str, optional): video ID of the new checkpoint. Defaults to ''.
+        offset (int, optional): offset to current checkpoint index. Defaults to 0.
+
+    Returns:
+        int: number of channels updated, -1 for invalid input
+    """
+    # return -1 if no new checkpoint provided
     if (not checkpoint_idx) and (not video_id) and (not offset): 
         return -1
 
@@ -60,16 +75,15 @@ def update_checkpoint(channel_id: str, checkpoint_idx=0, video_id='', offset=0):
     try: 
         cur = db.cursor()
 
+        # get new index
         if checkpoint_idx: 
             new_checkpoint_idx = int(checkpoint_idx)
-
         elif video_id: 
             cur.execute('SELECT upload_idx FROM video_list WHERE video_id=?', (video_id,))
             upload_idx_searching = cur.fetchall()
             if not upload_idx_searching: 
                 return -1
             new_checkpoint_idx = upload_idx_searching[0][0]
-
         elif offset: 
             cur.execute('SELECT checkpoint_idx FROM channel_list WHERE channel_id=?', (channel_id,))
             old_checkpoint = cur.fetchall()[0][0]
@@ -77,6 +91,7 @@ def update_checkpoint(channel_id: str, checkpoint_idx=0, video_id='', offset=0):
             if new_checkpoint_idx < 0: 
                 return -1
 
+        # update the table
         cur.execute('UPDATE channel_list SET checkpoint_idx=? WHERE channel_id=?', (new_checkpoint_idx, channel_id))
         return cur.rowcount
 
