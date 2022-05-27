@@ -1,9 +1,9 @@
 <div>
   <div class="row">
-    <div class="col-sm-9 col-lg-10 text-secondary align-self-center" style="font-size: 0.8em;">
-      Total {{videosOnPage.videoNum}}, showing {{(page-1)*pageSize+1}} to {{page*pageSize}}
+    <div class="col-9 col-lg-10 text-secondary align-self-center" style="font-size: 0.8em;">
+      Total {{videosOnPage.videoNum}}, showing {{(page-1)*pageSize+1}} to {{[page*pageSize, videosOnPage.videoNum] | numberArrayMin}}
     </div>
-    <div class="col-sm-3 col-lg-2 text-end pe-0">
+    <div class="col-3 col-lg-2 text-end pe-0">
       <div ngbDropdown id="jump-page-control" placement="bottom-end">
         <button class="btn text-secondary" id="dropdownBasic1" ngbDropdownToggle>Jump to</button>
         <div ngbDropdownMenu aria-labelledby="dropdownBasic1">

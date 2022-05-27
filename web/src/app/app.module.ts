@@ -13,12 +13,13 @@ import { ChannelsComponent } from './channels/channels.component';
 import { HomeComponent } from './home/home.component';
 import { LoginComponent } from './login/login.component';
 import { NavbarComponent } from './navbar/navbar.component';
-import { SingleChannelComponent } from './single-channel/single-channel.component';
-import { VideoListComponent } from './video-list/video-list.component';
-import { SingleVideoComponent } from './single-video/single-video.component';
-import { VideosComponent } from './videos/videos.component';
+import { NumberArrayMinPipe } from './number-array-min.pipe';
 import { SearchVideoComponent } from './search-video/search-video.component';
 import { SettingsComponent } from './settings/settings.component';
+import { SingleChannelComponent } from './single-channel/single-channel.component';
+import { SingleVideoComponent } from './single-video/single-video.component';
+import { VideoListComponent } from './video-list/video-list.component';
+import { VideosComponent } from './videos/videos.component';
 
 
 @NgModule({
@@ -35,7 +36,8 @@ import { SettingsComponent } from './settings/settings.component';
     SingleVideoComponent,
     VideosComponent,
     SearchVideoComponent,
-    SettingsComponent
+    SettingsComponent,
+    NumberArrayMinPipe
   ],
   imports: [
     BrowserModule,

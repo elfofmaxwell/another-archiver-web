@@ -28,8 +28,8 @@
   </div>
 </div>
 <div *ngIf="searchPage" class="row py-2">
-  <div class="col-sm-9 col-lg-10 text-secondary" style="font-size: 0.8em;">{{searchSum}}</div>
-  <div class="col-sm-3 col-lg-2 text-center text-sm-end">
+  <div class="col-9 col-lg-10 text-secondary" style="font-size: 0.8em;">{{searchSum}}</div>
+  <div class="col-3 col-lg-2 text-center text-sm-end">
     <a class="text-secondary" style="text-decoration: none; font-size: 0.8em; cursor: pointer;" (click)="timeDescending=!timeDescending; onSearch(timeDescending)">
       <ng-container *ngIf="timeDescending; then descendingTemp; else defaultTemp"></ng-container>
       <ng-template #descendingTemp><i class="iconfont icon-wind-descending"></i> Newest</ng-template>
