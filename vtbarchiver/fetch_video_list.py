@@ -99,6 +99,21 @@ def fetch_uploaded_list(channel_id: str):
         id_by_date = cur.fetchall()
         for upload_idx in range(len(id_by_date)): 
             cur.execute('UPDATE video_list SET upload_idx=? WHERE id=?', (upload_idx+1, id_by_date[upload_idx][0]))
+        
+        # update duration for all videos without valid duration
+        cur.execute('SELECT video_id FROM video_list WHERE duration=?', ('P0D', ))
+        zero_length_videos = cur.fetchall()
+        for zero_length_video in zero_length_videos: 
+            duration_request = youtube.videos().list(
+                part="contentDetails", 
+                id=zero_length_video['video_id']
+            )
+            duration_response = duration_request.execute()
+            if len(duration_response['items']) > 0: 
+                new_duration = duration_response['items'][0]['contentDetails']['duration']
+            else: 
+                new_duration = 'P0D'
+            cur.execute('UPDATE video_list SET duration=? WHERE video_id=?', (new_duration, zero_length_video['video_id']))
     except: 
         raise
     finally: 

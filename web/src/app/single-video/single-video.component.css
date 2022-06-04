@@ -43,6 +43,7 @@
     transform: translate(5%, -50%); 
     background-color: var(--bs-white); 
     padding: 0 0.5em;
+    max-width: 80%;
 }
 
 .setting-block {
