@@ -21,3 +21,9 @@ Yet another web app shares some functions with another-archiver.
 * Dark mode
 
 * Better error handling pages
+
+* *api for show videos that are not downloaded*
+
+* ~~*api for run fetch first, then download new*~~
+
+* *update participator's name after update channel name*

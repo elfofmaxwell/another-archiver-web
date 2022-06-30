@@ -105,6 +105,25 @@ export class SettingsComponent implements OnInit {
     );
   }
 
+
+  onTriggerFetchDownload() {
+    this.downloaderService.triggerFetchDownload()
+    .subscribe(
+      (downloadResult: IDownloading|ErrorMessage) => {
+        if (downloadResult instanceof ErrorMessage) {
+          this.messageService.setSingleMessage(this.messageList, downloadResult.message, 'danger');
+        } else {
+          this.downloaderStatus = downloadResult.downloading;
+          if (downloadResult.downloading) {
+            this.messageService.setSingleMessage(this.messageList, 'Downloader started', 'success');
+          } else {
+            this.messageService.setSingleMessage(this.messageList, 'Downloader starting failed!', 'danger');
+          }
+        }
+      }
+    )
+  }
+  
   
   onStopDownloader() {
     this.downloaderService.stopDownload()

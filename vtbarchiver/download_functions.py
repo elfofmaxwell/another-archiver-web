@@ -9,6 +9,7 @@ import yaml
 from flask import current_app, g
 from flask.cli import with_appcontext
 
+import vtbarchiver.fetch_video_list
 from vtbarchiver.db_functions import get_db
 from vtbarchiver.local_file_management import scan_local_videos
 
@@ -21,8 +22,9 @@ def check_lock():
 @click.command('download-single')
 @click.option('--video_id', required=True)
 @click.option('--sequenced', default=False)
+@click.option('--complete', default=False)
 @with_appcontext
-def download_single_video(video_id, sequenced): 
+def download_single_video(video_id, sequenced, complete): 
     # check if there is any other download process running
     db = get_db()
     cur = db.cursor()
@@ -38,7 +40,7 @@ def download_single_video(video_id, sequenced):
 
     try: 
         # find video
-        cur.execute("SELECT channel_id, upload_date FROM video_list WHERE video_id=?", (video_id, ))
+        cur.execute("SELECT channel_id, upload_date, duration FROM video_list WHERE video_id=?", (video_id, ))
         single_video = cur.fetchone()
         if not single_video: 
             print("No such video! ")
@@ -49,7 +51,15 @@ def download_single_video(video_id, sequenced):
                 callback_args = ['flask', 'download-channels', '--callback', single_video['channel_id']]
                 subprocess.Popen(callback_args, env=os.environ.copy())
             return 0
-
+        # skip 0-duration contents
+        if single_video['duration'] == 'P0D': 
+            if sequenced:  
+                callback_args = ['flask', 'download-channels', '--callback', single_video['channel_id']]
+                subprocess.Popen(callback_args, env=os.environ.copy())
+            elif complete: 
+                callback_args = ['flask', 'download-incomplete', '--callback', single_video['video_id']]
+                subprocess.Popen(callback_args, env=os.environ.copy())
+            return 0
         # load config and create download path
         conf_path = current_app.config['DL_CONF_PATH']
         with open(conf_path) as f: 
@@ -102,10 +112,13 @@ def download_single_video(video_id, sequenced):
         if sequenced: 
             callback_args = ['flask', 'download-channels', '--callback', single_video['channel_id']]
             subprocess.Popen(callback_args, env=os.environ.copy())
-        else: 
+        else:
             scan_path = conf['local_videos']
             if scan_path: 
                 scan_local_videos(scan_path)
+                if complete: 
+                    callback_args = ['flask', 'download-incomplete', '--callback', single_video['video_id']]
+                    subprocess.Popen(callback_args, env=os.environ.copy())
 
 
     except: 
@@ -165,3 +178,43 @@ def download_channels_cmd(callback):
     finally: 
         cur.close()
     
+
+@click.command('download-incomplete')
+@click.option('--callback', default='')
+@with_appcontext
+def download_incomplete_cmd(callback): 
+    db = get_db()
+    cur = db.cursor()
+
+    try: 
+        cur.execute(
+            '''
+            SELECT vl.video_id video_id, vl.duration duration, lv.video_path local_path
+            FROM video_list vl
+            LEFT OUTER JOIN local_videos lv
+            ON vl.video_id = lv.video_id
+            LEFT OUTER JOIN channel_list cl
+            ON vl.channel_id = cl.channel_id
+            WHERE (lv.video_path IS NULL) AND (NOT vl.duration=?) AND (NOT (vl.video_id LIKE ? ESCAPE '\\')) AND (vl.upload_idx <= cl.checkpoint_idx)
+            ''', ('P0D', r'\_\_%')
+        )
+        unfinished_video = cur.fetchone()
+        if unfinished_video: 
+            downloader_args = ['flask', 'download-single', '--video-id', unfinished_video['video_id'], '--complete', 'True']
+            subprocess.Popen(downloader_args, env=os.environ.copy())
+    finally: 
+        cur.close()
+
+
+def fetch_and_download(): 
+    vtbarchiver.fetch_video_list.fetch_all()
+    if not check_lock():
+        flask_env = os.environ.copy()
+        subprocess.Popen(['flask', 'download-channels'], env=flask_env)
+
+
+@click.command('fetch-and-download')
+@with_appcontext
+def fetch_and_download_cmd(): 
+    fetch_and_download()
+

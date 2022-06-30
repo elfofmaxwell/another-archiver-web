@@ -56,7 +56,13 @@
             <button id="stop-dl" type="button" class="btn btn-danger" (click)="onStopDownloader()">Stop Downloader</button> <span class="ps-2">Downloader is running, press to stop. </span>
           </ng-template>
           <ng-template #triggerDownloader>
-            <button id="start-dl" type="button" class="btn btn-success" (click)="onTriggerDownload()">Start Downloader</button> <span class="ps-2">Downloader is free, press to start. </span>
+            <div class="mb-2">
+              <button id="start-dl" type="button" class="btn btn-success" (click)="onTriggerDownload()">Start Downloader</button> <span class="ps-2">Downloader is free, press to start. </span>
+            </div>
+
+            <div>
+              <button id="start-fetch-dl" type="button" class="btn btn-success" (click)="onTriggerFetchDownload()">Fetch and download</button>
+            </div>
           </ng-template>
         </div>
       </div>

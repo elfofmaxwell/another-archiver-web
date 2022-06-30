@@ -13,7 +13,7 @@ from vtbarchiver.channels import (add_channel, delete_channel, edit_checkpoint,
                                   single_channel_detail, single_channel_videos)
 from vtbarchiver.db_functions import (ChannelStats, get_db, get_new_hex_vid,
                                       regenerate_upload_index, tag_suggestions)
-from vtbarchiver.download_functions import check_lock
+from vtbarchiver.download_functions import check_lock, fetch_and_download
 from vtbarchiver.fetch_video_list import add_talent_name, fetch_all
 from vtbarchiver.local_file_management import scan_local_videos
 from vtbarchiver.management import (api_login_required, get_settings,
@@ -416,6 +416,13 @@ def trigger_download_api():
     sleep(0.5)
     return jsonify({'downloading': check_lock()})
 
+
+@bp.route('/trigger-fetch-download', methods=('GET', ))
+@api_login_required
+def trigger_fetch_download_api(): 
+    fetch_and_download()
+    sleep(0.5)
+    return jsonify({'downloading': check_lock()})
 
 
 # stop download process

@@ -32,6 +32,8 @@ def create_app(test_config=None):
     app.cli.add_command(management.regenerate_search_index)
     app.cli.add_command(download_functions.download_single_video)
     app.cli.add_command(download_functions.download_channels_cmd)
+    app.cli.add_command(download_functions.download_incomplete_cmd)
+    app.cli.add_command(download_functions.fetch_and_download_cmd)
     
     app.register_blueprint(management.bp)
     app.register_blueprint(api.bp)
