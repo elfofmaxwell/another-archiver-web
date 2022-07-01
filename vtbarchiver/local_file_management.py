@@ -15,7 +15,7 @@ def scan_local_videos(video_dir):
         for root_path, dir_names, file_names in os.walk(video_dir): 
             for file_name_full in file_names: 
                 file_name, file_ext = os.path.splitext(file_name_full)
-                if file_ext.lower() in ('.mp4', '.webm'): 
+                if file_ext.lower() in ('.mp4', '.webm', '.mkv'): 
                     pseudo_vid = file_name
                     cur.execute('SELECT id FROM video_list WHERE video_id=?', (pseudo_vid, ))
                     if cur.fetchall(): 
