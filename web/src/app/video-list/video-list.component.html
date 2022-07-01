@@ -7,14 +7,16 @@
       <div ngbDropdown id="jump-page-control" placement="bottom-end">
         <button class="btn text-secondary" id="dropdownBasic1" ngbDropdownToggle>Jump to</button>
         <div ngbDropdownMenu aria-labelledby="dropdownBasic1">
-          <div class="d-flex">
-            <div class="m-2">
-              <input type="number" class="form-control" [(ngModel)]="jumpToPage">
+          <form #jumpPageForm="ngForm" (ngSubmit)="jumpTo(jumpPageForm)">
+            <div class="d-flex">
+              <div class="m-2">
+                <input type="number" class="form-control" name="jumpToPage" ngModel>
+              </div>
+              <div class="align-self-center me-2">
+                <button class="btn btn-outline-secondary">Go</button>
+              </div>
             </div>
-            <div class="align-self-center me-2">
-              <button class="btn btn-outline-secondary" (click)="jumpTo()">Go</button>
-            </div>
-          </div>
+          </form>
         </div>
       </div>
     </div>

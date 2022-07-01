@@ -1,4 +1,5 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { IMessage, MessageService } from '../message.service';
 import { ParseFuncsService } from '../parse-funcs.service';
@@ -29,7 +30,6 @@ export class VideoListComponent implements OnChanges {
   videosOnPage: IVideoList = {videoNum: 0, videoList: []};
   pageNum: number = 0;
   private _page: number = 1;
-  jumpToPage: number = 1;
   get page(): number {
     return this._page;
   }
@@ -84,8 +84,8 @@ export class VideoListComponent implements OnChanges {
     }
   }
 
-  jumpTo() {
-    const jumpToPage = this.jumpToPage;
+  jumpTo(jumpPageForm: NgForm) {
+    const jumpToPage = Number(jumpPageForm.value.jumpToPage);
     if (jumpToPage <= 0) {
       this.page = 1;
     } else if (jumpToPage > this.pageNum) {
