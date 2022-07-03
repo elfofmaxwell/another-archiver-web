@@ -103,7 +103,7 @@ export class VideosService {
   }
 
 
-  manuallyAddVideo (videoId: string='', unarchivedContent: boolean=false, title: string='', uploadDate: string='', duration: string='', thumbUrl: string='', channelId: string='', talentNames: string[]=[], stream_types: string[]=[]): Observable<AddedVideoDetail> {
+  manuallyAddVideo (videoId: string='', unarchivedContent: boolean=false, title: string='', uploadDate: string='', duration: string='', thumbUrl: string='', channelId: string='', talentNames: string[]=[], streamTypes: string[]=[]): Observable<AddedVideoDetail> {
     return this.http.post<AddedVideoDetail>(this.MANUALLY_ADD_VIDEO_URL, {
       videoId: videoId, 
       unarchivedContent: unarchivedContent,
@@ -113,7 +113,7 @@ export class VideosService {
       thumbUrl: thumbUrl, 
       channelId: channelId, 
       talentNames: talentNames, 
-      stream_types: stream_types
+      streamTypes: streamTypes
     }).pipe(
       catchError(
         ()=>{
