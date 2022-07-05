@@ -11,14 +11,14 @@ class VideoInfo():
     '''
     Attributions: video_id, title, upload_date
     '''
-    def __init__(self, video_id: str, title: str, upload_date: str, thumb_url: str) -> None:
+    def __init__(self, video_id: str, title: str, thumb_url: str) -> None:
         '''
         args: video_id (str), title (str), upload_date (str);
         Store video info in a VideoInfo object
         '''
         self.video_id = video_id
         self.title = title
-        self.upload_date = upload_date
+        self.upload_date = ''
         self.thumb_url = thumb_url
         self.duration = ''
 
@@ -31,7 +31,6 @@ def retrieve_video_info(video_dict: dict):
     video_info = VideoInfo(
         video_id=video_dict["snippet"]["resourceId"]["videoId"], 
         title=video_dict["snippet"]["title"], 
-        upload_date=video_dict["snippet"]["publishedAt"], 
         thumb_url=video_dict["snippet"]["thumbnails"]["high"]["url"]
     )
     return video_info
@@ -86,6 +85,7 @@ def fetch_uploaded_list(channel_id: str):
                         id=single_video_info.video_id
                     )
                     duration_response = duration_request.execute()
+                    single_video_info.upload_date = duration_response['items'][0]['contentDetails']['videoPublishedAt']
                     single_video_info.duration = duration_response['items'][0]['contentDetails']['duration']
 
                     cur.execute('INSERT INTO video_list (video_id, title, upload_date, duration, channel_id, thumb_url) VALUES (?, ?, ?, ?, ?, ?)', (single_video_info.video_id, single_video_info.title, single_video_info.upload_date, single_video_info.duration, channel_id, single_video_info.thumb_url))
@@ -111,9 +111,10 @@ def fetch_uploaded_list(channel_id: str):
             duration_response = duration_request.execute()
             if len(duration_response['items']) > 0: 
                 new_duration = duration_response['items'][0]['contentDetails']['duration']
+                new_upload_date = duration_response['items'][0]['contentDetails']['videoPublishedAt']
             else: 
                 new_duration = 'P0D'
-            cur.execute('UPDATE video_list SET duration=? WHERE video_id=?', (new_duration, zero_length_video['video_id']))
+            cur.execute('UPDATE video_list SET duration=?, upload_date=? WHERE video_id=?', (new_duration, new_upload_date, zero_length_video['video_id']))
     except: 
         raise
     finally: 
