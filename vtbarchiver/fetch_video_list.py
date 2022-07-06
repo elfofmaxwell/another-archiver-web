@@ -11,14 +11,14 @@ class VideoInfo():
     '''
     Attributions: video_id, title, upload_date
     '''
-    def __init__(self, video_id: str, title: str, thumb_url: str) -> None:
+    def __init__(self, video_id: str, title: str, upload_date: str, thumb_url: str) -> None:
         '''
         args: video_id (str), title (str), upload_date (str);
         Store video info in a VideoInfo object
         '''
         self.video_id = video_id
         self.title = title
-        self.upload_date = ''
+        self.upload_date = upload_date
         self.thumb_url = thumb_url
         self.duration = ''
 
@@ -31,6 +31,7 @@ def retrieve_video_info(video_dict: dict):
     video_info = VideoInfo(
         video_id=video_dict["snippet"]["resourceId"]["videoId"], 
         title=video_dict["snippet"]["title"], 
+        upload_date=video_dict['contentDetails']['videoPublishedAt'],
         thumb_url=video_dict["snippet"]["thumbnails"]["high"]["url"]
     )
     return video_info
@@ -63,7 +64,7 @@ def fetch_uploaded_list(channel_id: str):
         
         # get detail of videos inside upload playlist
         request = youtube.playlistItems().list(
-            part="snippet", 
+            part="snippet,contentDetails", 
             playlistId=uploads_id, 
             maxResults=50, 
         )
@@ -76,7 +77,7 @@ def fetch_uploaded_list(channel_id: str):
                 if single_video['snippet']['resourceId']['kind'] == 'youtube#video': 
                     single_video_info = retrieve_video_info(single_video)
                     # if returned video info match existing video info, stop
-                    if single_video_info.video_id in [i[1] for i in existing_video_list]: 
+                    if single_video_info.video_id in [i['video_id'] for i in existing_video_list]: 
                         all_new_fetched = True
                         break
                     
@@ -85,9 +86,8 @@ def fetch_uploaded_list(channel_id: str):
                         id=single_video_info.video_id
                     )
                     duration_response = duration_request.execute()
-                    single_video_info.upload_date = duration_response['items'][0]['contentDetails']['videoPublishedAt']
                     single_video_info.duration = duration_response['items'][0]['contentDetails']['duration']
-
+                    
                     cur.execute('INSERT INTO video_list (video_id, title, upload_date, duration, channel_id, thumb_url) VALUES (?, ?, ?, ?, ?, ?)', (single_video_info.video_id, single_video_info.title, single_video_info.upload_date, single_video_info.duration, channel_id, single_video_info.thumb_url))
 
                     tagged_title = tag_title(single_video_info.title)
