@@ -111,10 +111,9 @@ def fetch_uploaded_list(channel_id: str):
             duration_response = duration_request.execute()
             if len(duration_response['items']) > 0: 
                 new_duration = duration_response['items'][0]['contentDetails']['duration']
-                new_upload_date = duration_response['items'][0]['contentDetails']['videoPublishedAt']
             else: 
                 new_duration = 'P0D'
-            cur.execute('UPDATE video_list SET duration=?, upload_date=? WHERE video_id=?', (new_duration, new_upload_date, zero_length_video['video_id']))
+            cur.execute('UPDATE video_list SET duration=? WHERE video_id=?', (new_duration, zero_length_video['video_id']))
     except: 
         raise
     finally: 
