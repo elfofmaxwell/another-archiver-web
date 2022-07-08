@@ -11,7 +11,7 @@ class VideoInfo():
     '''
     Attributions: video_id, title, upload_date
     '''
-    def __init__(self, video_id: str, title: str, upload_date: str, thumb_url: str) -> None:
+    def __init__(self, video_id: str, title: str, upload_date: str, thumb_url: str, duration: str='') -> None:
         '''
         args: video_id (str), title (str), upload_date (str);
         Store video info in a VideoInfo object
@@ -20,7 +20,7 @@ class VideoInfo():
         self.title = title
         self.upload_date = upload_date
         self.thumb_url = thumb_url
-        self.duration = ''
+        self.duration = duration
 
 
 def retrieve_video_info(video_dict: dict): 
@@ -75,18 +75,29 @@ def fetch_uploaded_list(channel_id: str):
             response = request.execute()
             for single_video in response["items"]: 
                 if single_video['snippet']['resourceId']['kind'] == 'youtube#video': 
-                    single_video_info = retrieve_video_info(single_video)
+                    single_video_id = single_video["snippet"]["resourceId"]["videoId"]
                     # if returned video info match existing video info, stop
-                    if single_video_info.video_id in [i['video_id'] for i in existing_video_list]: 
+                    if single_video_id in [i['video_id'] for i in existing_video_list]: 
                         all_new_fetched = True
                         break
                     
-                    duration_request = youtube.videos().list(
-                        part="contentDetails", 
-                        id=single_video_info.video_id
+                    detail_request = youtube.videos().list(
+                        part="snippet,contentDetails,liveStreamingDetails", 
+                        id=single_video_id
                     )
-                    duration_response = duration_request.execute()
-                    single_video_info.duration = duration_response['items'][0]['contentDetails']['duration']
+                    detail_response = detail_request.execute()
+                    single_video_info = VideoInfo(
+                        video_id=single_video_id, 
+                        title=detail_response['items'][0]['snippet']['title'], 
+                        upload_date='', 
+                        thumb_url=detail_response['items'][0]["snippet"]["thumbnails"]["high"]["url"],
+                        duration=detail_response['items'][0]['contentDetails']['duration']
+                    )
+                    
+                    if detail_response['items'][0].get('liveStreamingDetails'): 
+                        single_video_info.upload_date = detail_response['items'][0]['liveStreamingDetails']['scheduledStartTime']
+                    else: 
+                        single_video_info.upload_date = detail_response['items'][0]['snippet']['publishedAt']
                     
                     cur.execute('INSERT INTO video_list (video_id, title, upload_date, duration, channel_id, thumb_url) VALUES (?, ?, ?, ?, ?, ?)', (single_video_info.video_id, single_video_info.title, single_video_info.upload_date, single_video_info.duration, channel_id, single_video_info.thumb_url))
 
@@ -104,16 +115,24 @@ def fetch_uploaded_list(channel_id: str):
         cur.execute('SELECT video_id FROM video_list WHERE duration=?', ('P0D', ))
         zero_length_videos = cur.fetchall()
         for zero_length_video in zero_length_videos: 
-            duration_request = youtube.videos().list(
-                part="contentDetails", 
+            detail_request = youtube.videos().list(
+                part="snippet,contentDetails,liveStreamingDetails", 
                 id=zero_length_video['video_id']
             )
-            duration_response = duration_request.execute()
-            if len(duration_response['items']) > 0: 
-                new_duration = duration_response['items'][0]['contentDetails']['duration']
-            else: 
-                new_duration = 'P0D'
-            cur.execute('UPDATE video_list SET duration=? WHERE video_id=?', (new_duration, zero_length_video['video_id']))
+            detail_response = detail_request.execute()
+            if len(detail_response['items']) > 0: 
+                new_single_video_info = VideoInfo(
+                    video_id=zero_length_video['video_id'], 
+                    title=detail_response['items'][0]['snippet']['title'], 
+                    upload_date='', 
+                    thumb_url=detail_response['items'][0]["snippet"]["thumbnails"]["high"]["url"],
+                    duration=detail_response['items'][0]['contentDetails']['duration']
+                )
+                if detail_response['items'][0].get('liveStreamingDetails'): 
+                    new_single_video_info.upload_date = detail_response['items'][0]['liveStreamingDetails']['scheduledStartTime']
+                else: 
+                    new_single_video_info.upload_date = detail_response['items'][0]['snippet']['publishedAt']
+                cur.execute('UPDATE video_list SET title=?, upload_date=?, duration=? WHERE video_id=?', (new_single_video_info.title, new_single_video_info.upload_date, new_single_video_info.duration, zero_length_video['video_id']))
     except: 
         raise
     finally: 
