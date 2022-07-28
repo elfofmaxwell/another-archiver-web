@@ -6,7 +6,8 @@ from time import sleep
 
 import psutil
 import yaml
-from flask import Blueprint, abort, current_app, g, jsonify, request, session
+from flask import (Blueprint, Response, abort, current_app, g, jsonify,
+                   request, session)
 
 from vtbarchiver.channels import (add_channel, delete_channel, edit_checkpoint,
                                   edit_talent, get_channels,
@@ -27,11 +28,28 @@ bp = Blueprint('api', __name__, url_prefix='/api')
 
 @bp.errorhandler(400)
 def bad_request(e): 
+    """return an empty json array with state 400 when bad request (no auth, etc)
+
+    Args:
+        e (request error): any http error message
+
+    Returns:
+        (Response, state): an empty json with state 400
+    """
     return jsonify({}), 400
 
 
 @bp.route('/get-tag-suggestion')
-def get_tag_suggestion(): 
+def get_tag_suggestion() -> Response: 
+    """Get tag suggestions
+
+    Returns:
+        Response: json of a list containing suggestions
+
+    URL parameters: 
+        tagType: "talents" or "stream_type" for the table to retrieve suggestions
+        queryStr: user input for suggestions
+    """
     tag_type = request.args.get('tagType', '')
     query_str = request.args.get('queryStr', '')
     return jsonify(tag_suggestions(tag_type, query_str))
